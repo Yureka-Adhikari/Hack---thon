@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Ward Broadcast Channel</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+        }
+
+        .broadcast-container {
+            max-width: 500px;
+            margin: auto;
+            background: #ffffff;
+            min-height: 100vh;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+
+        .channel-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        .channel-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .verified {
+            color: #0095f6;
+            font-size: 14px;
+        }
+
+        .join-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .join-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Feed */
+        .feed {
+            padding: 15px;
+        }
+
+        /* Post Card */
+        .post-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .post-header {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: gray;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .post-message {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Emergency Style */
+        .emergency {
+            border: 2px solid #ff4d4d;
+            background: #fff5f5;
+        }
+
+        /* Reaction Bar */
+        .reactions {
+            margin-top: 10px;
+            font-size: 14px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="broadcast-container">
+
+        <div class="channel-header">
+            <h2>Ward 10 Updates <span class="verified">✔</span></h2>
+            <p>Official Broadcast Channel</p>
+            <button class="join-btn" onclick="joinChannel()">Join Channel</button>
+        </div>
+
+        <div class="feed" id="feed"></div>
+
+    </div>
+
+    <script>
+        const broadcasts = [{
+                title: "Water Supply Notice",
+                message: "Water supply will be disrupted in Tole-3 from 2 PM to 6 PM due to maintenance work.",
+                timestamp: "2 hours ago",
+                type: "normal"
+            },
+            {
+                title: "Emergency: Road Blocked",
+                message: "Main Street is currently blocked due to fallen electric poles. Please avoid the area.",
+                timestamp: "30 minutes ago",
+                type: "emergency"
+            },
+            {
+                title: "Garbage Collection Update",
+                message: "Garbage collection will be delayed by one day due to vehicle maintenance.",
+                timestamp: "Yesterday",
+                type: "normal"
+            }
+        ];
+
+        function loadBroadcasts() {
+            const feed = document.getElementById("feed");
+
+            broadcasts.forEach(post => {
+                const card = document.createElement("div");
+                card.className = "post-card";
+
+                if (post.type === "emergency") {
+                    card.classList.add("emergency");
+                }
+
+                card.innerHTML = `
+            <div class="post-header">Ward 10 ✔</div>
+            <div class="timestamp">${post.timestamp}</div>
+            <div class="post-title">${post.title}</div>
+            <div class="post-message">${post.message}</div>
+            <div class="reactions">👍 24   ❤️ 10</div>
+        `;
+
+                feed.appendChild(card);
+            });
+        }
+
+        function joinChannel() {
+            alert("You have joined Ward 10 Broadcast Channel!");
+        }
+
+        loadBroadcasts();
+    </script>
+
+</body>
+
+</html>
