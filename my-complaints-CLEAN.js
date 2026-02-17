@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
+ 
 let currentUser = null;
 let userWard = "N/A";
 let userMunicipality = "N/A";
@@ -26,6 +26,29 @@ onAuthStateChanged(auth, async (user) => {
     }
     
     // Load existing complaints
+    loadComplaints();
+  }
+});onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
+    currentUser = user;
+    console.log("✓ User authenticated:", user.uid);
+
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        document.getElementById("uNameMain").textContent =
+          data.fullName || "User";
+        // ... rest of your UI updates
+      }
+    } catch (error) {
+      console.error("Could not load profile:", error);
+      // Even if profile fails, we still try to load complaints
+    }
+
+    // Move this outside the try/catch or ensure it's called
     loadComplaints();
   }
 });
