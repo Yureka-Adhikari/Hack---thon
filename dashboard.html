@@ -7,44 +7,40 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body { background-color: #f0f2f5; }
-        #sidebar { width: 260px; min-height: 100vh; background: #1a237e; color: white; }
+        #sidebar { width: 260px; min-height: 100vh; background: #2A4B79; color: white; }
         .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 4px 15px; }
         .nav-link.active { background: rgba(255,255,255,0.2); color: white; }
         .card { border: none; border-radius: 12px; transition: 0.3s; }
         .card:hover { transform: translateY(-5px); }
         .gradient-custom-1 {
-        background: #6a11cb;
-        background: linear-gradient(to right, rgb(0, 0, 0), rgb(21, 20, 80))
+            background: #115bcb;
         }
         .gradient-custom-2 {
-        background: #30cfd0;
-
-        background: -webkit-linear-gradient(to right, rgba(48,207,208,1), rgba(51,8,103,1));
-
-        background: linear-gradient(to right, rgb(76, 96, 164), rgb(27, 0, 90))
-}
-
+            background: #30cfd0;
+            background: -webkit-linear-gradient(to right, rgba(48,207,208,1), rgba(51,8,103,1));
+            background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
+        }
     </style>
 </head>
 <body>
-
 <div class="d-flex">
-    <div id="sidebar" class="d-flex flex-column p-3 gradient-custom-1" >
+    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
         <h3 class="p-3 fw-bold">CivicSewa</h3>
         <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
+        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
             <li class="nav-item"><a href="#" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
             <li><a href="#" class="nav-link "><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
             <li><a href="#" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
             <li><a href="#" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
+            <li><a href="#" class="nav-link"><i class="bi bi-broadcast me-2"></i> Road </a></li>
             <li><a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
         </ul>
         <hr>
         <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
     </div>
 
-    <div class="flex-grow-1">
-        <nav class="navbar navbar-expand bg-white shadow-sm p-3 mb-4">
+    <div class="flex-grow-1 d-flex flex-column" style="background-color:#2A4B79;color: white; min-height: 100vh; margin-left: 260px;">
+        <nav class="navbar navbar-expand shadow-sm p-3">
             <div class="container-fluid">
                 <input type="text" class="form-control w-25" placeholder="Search...">
                 <div class="ms-auto d-flex align-items-center">
@@ -54,12 +50,12 @@
             </div>
         </nav>
 
-        <div class="container-fluid px-5 gradient-custom-2", style="background-color: rgb(6, 1, 77); color: white; min-height: 100vh; padding: 40px 20px;">
+        <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
             <h2 class="mb-4">Welcome, <span id="uNameMain">Citizen</span></h2>
-            
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card p-4 shadow-sm text-center" style="height: 210px; top:5px; bottom: 20px;">
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="card p-4 shadow-sm text-center" style="height: 210px; top: 5px; bottom: 20px;">
                         <i class="bi bi-plus-circle text-primary fs-1 mb-2"></i>
                         <h5>Submit Complaint</h5>
                         <p class="small text-muted">Report local issues!</p>
@@ -72,13 +68,61 @@
                         <button class="btn btn-danger w-100" style="padding: 8px 12px; position: relative;">Road Damage</button>
                     </div>
                 </div>
-                <div class="col-md-4" >
-                    <div class="card p-4 shadow-sm h-100 text-center" style="height: 210px; top:5px; bottom: 20px;">
+                <div class="col-md-4">
+                    <div class="card p-4 shadow-sm h-100 text-center" style="height: 210px; top: 5px; bottom: 20px;">
                         <i class="bi bi-chat-dots fs-1 mb-2"></i>
                         <h5>My Complaints</h5>
-                        <img src="complain.jpeg" alt="Complaints" class="img-fluid my-2" style="max-height: 150px;">
-                        <p class="small text-muted">Track the status of your reports.</p>
-                        <button class="btn btn-primary mt-auto">View Complaints</button>
+                        <div class="mb-3">
+                            <div style="margin: 15px 0;">
+                                <div style="position: relative; padding: 20px 0;">
+                                    <!-- Progress line background -->
+                                    <div style="position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: #e0e0e0;"></div>
+                                    <!-- Blue segment (Submitted to In Progress) -->
+                                    <div style="position: absolute; top: 15px; left: 0; width: 50%; height: 4px; background: #0d47a1;"></div>
+                                    <!-- Yellow segment (In Progress to Resolved) -->
+                                    <div style="position: absolute; top: 15px; left: 50%; right: 0; height: 4px; background: #ffc107;"></div>
+                                    
+                                    <!-- Nodes -->
+                                    <div style="display: flex; justify-content: space-between; position: relative; z-index: 1;">
+                                        <div class="text-center" style="flex: 1;">
+                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #0d47a1; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">Submitted</small>
+                                        </div>
+                                        <div class="text-center" style="flex: 1;">
+                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #ffc107; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">In Progress</small>
+                                        </div>
+                                        <div class="text-center" style="flex: 1;">
+                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #28a745; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">Resolved</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <img src="complain.jpeg" alt="Complaints" class="img-fluid my-2" style="max-height: 170px;">
+                        <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;">View Complaint</button>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card p-4 shadow-sm" style="height: 250px; width:300px; top: 20px;">
+                        <h5 class="mb-3">Recent Updates</h5>
+                        <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                            <li class="list-group-item" style="border-left: 4px solid #0d6efd;"><span class="badge bg-primary me-2">Water</span>Water supply will be disrupted on 5th Aug.</li>
+                            <li class="list-group-item" style="border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Road</span>Road repair work starts from 10th Aug.</li>
+                            <li class="list-group-item" style="border-left: 4px solid #198754;"><span class="badge bg-success me-2">Waste</span>New waste collection schedule announced.</li>
+                            <li class="list-group-item" style="border-left: 4px solid #6f42c1;"><span class="badge bg-secondary me-2">General</span>Community meeting on 15th Aug at 5 PM.</li>
+                            <li class="list-group-item" style="border-left: 4px solid #ffc107;"><span class="badge bg-warning me-2" style="color: #000;">Electricity</span>Electricity maintenance on 20th Aug.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card p-4 shadow-sm" style="height: 170px; width:300px; top: 40px;">
+                            <h5 class="mb-3" style="background-color: #dc3545; color: white; padding: 10px; border-radius: 5px;">Emergency Alerts</h5>
+                            <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                <li class="list-group-item emergency" style="border: 1px solid #dc3545; border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Emergency</span>Road blocked due to landslide in Tole-3.</li>
+                                <li class="list-group-item emergency" style="border: 1px solid #dc3545; border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Emergency</span>Fire reported in local market, avoid the area.</li>
+                            </ul>
+
                     </div>
                 </div>
             </div>
