@@ -28,9 +28,9 @@
         <h3 class="p-3 fw-bold">CivicSewa</h3>
         <hr>
         <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="#" class="nav-link "><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="my-complaints.html" class="nav-link active"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>    
+            <li><a href="#" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
             <li><a href="Broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
             <li><a href="#" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
             <li><a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
@@ -51,20 +51,15 @@
         </nav>
 
         <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
-            <h2 class="mb-4">Welcome, <span id="uNameMain">Citizen</span></h2>
-
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="card p-4 shadow-sm text-center" style="height: 210px; top: 5px; bottom: 20px;">
-                        <i class="bi bi-plus-circle text-primary fs-1 mb-2"></i>
-                        <h5>Submit Complaint</h5>
-                        <p class="small text-muted">Report local issues!</p>
-                        <button class="btn btn-primary mt-auto" data-bs-toggle="modal" data-bs-target="#complaintModal">Create New</button>
-                    </div>
-                </div>
+            <h2 class="mb-4">My Complaints - <span id="uNameMain">Citizen</span></h2>
+            
+            <div id="complaintsContainer" class="row g-3">
+                
             </div>
         </div>
     </div>
-    </div>
-    </body>
-    </html>
+</div>
+
+<script type="module" src="my-complaints.js"></script>
+</body>
+</html>
