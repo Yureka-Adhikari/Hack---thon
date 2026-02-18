@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CivicSewa | Login</title>
+<title>CivicSewa | Sign Up</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
+/* same variables */
 :root{
     --nav-blue:#294b76;
     --primary:#1f6fff;
@@ -28,7 +29,6 @@ body{
     overflow:hidden;
     font-family:"Segoe UI",sans-serif;
     perspective:1200px;
-    transition:.6s;
 }
 
 /* flip overlay */
@@ -38,32 +38,23 @@ body{
     background:linear-gradient(135deg,#1e40af,#020617);
     z-index:9998;
     transform:rotateY(90deg);
-    transform-origin:center;
     transition:.6s cubic-bezier(.77,0,.175,1);
-    backface-visibility:hidden;
 }
-#themeFlip.active{
-    transform:rotateY(0deg);
-}
+#themeFlip.active{transform:rotateY(0deg);}
 
-/* Soft civic grid */
+/* background */
 .bg-lines{
     position:absolute;
     inset:0;
-    background:
-        repeating-linear-gradient(135deg,
-            rgba(31,111,255,.05) 0px,
-            rgba(31,111,255,.05) 1px,
-            transparent 1px,
-            transparent 18px);
-    animation: drift 40s linear infinite;
+    background:repeating-linear-gradient(135deg,rgba(31,111,255,.05) 0px,rgba(31,111,255,.05) 1px,transparent 1px,transparent 18px);
+    animation:drift 40s linear infinite;
 }
 @keyframes drift{
     from{background-position:0 0;}
     to{background-position:1000px 1000px;}
 }
 
-/* Floating widgets */
+/* widgets */
 .widget{
     position:absolute;
     background:rgba(255,255,255,.6);
@@ -76,13 +67,9 @@ body{
 .w1{width:220px;height:140px;left:6%;top:20%;}
 .w2{width:180px;height:110px;right:8%;top:30%;animation-delay:1s;}
 .w3{width:260px;height:150px;right:12%;bottom:18%;animation-delay:2s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-20px);}}
 
-@keyframes float{
-    0%,100%{transform:translateY(0);}
-    50%{transform:translateY(-20px);}
-}
-
-/* Dino + logo */
+/* Dino */
 .dino{
     position:absolute;
     right:40px;
@@ -97,24 +84,21 @@ body{
     right:-20px;
     background:var(--primary);
     color:white;
-    font-weight:800;
     padding:6px 14px;
     border-radius:14px;
-    font-size:14px;
+    font-weight:800;
 }
 
-/* Login card */
-.login-card{
-    position:relative;
+/* card */
+.signup-card{
     background:var(--panel);
-    border-radius:24px;
     padding:50px;
+    border-radius:24px;
     width:100%;
     max-width:420px;
     box-shadow:0 30px 80px rgba(0,0,0,.08);
     border:1px solid var(--border);
     z-index:10;
-    animation:fadeIn 1s ease;
 }
 
 h2{
@@ -125,30 +109,10 @@ h2{
     cursor:pointer;
 }
 
-/* Role selector */
-.role-box{
-    background:var(--soft);
-    border-radius:12px;
-    padding:10px 14px;
-    margin-bottom:20px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    color:var(--muted);
-}
-.role-box select{
-    background:transparent;
-    border:none;
-    color:var(--primary);
-    font-weight:700;
-    outline:none;
-}
-
-/* Inputs */
+/* inputs */
 .form-control{
     background:var(--soft);
     border:1px solid var(--border);
-    color:var(--text);
     border-radius:12px;
     padding:14px;
 }
@@ -157,72 +121,41 @@ h2{
     border-color:var(--primary);
 }
 
-/* Buttons */
+/* button */
 .btn-primary{
     background:var(--primary);
     border:none;
-    font-weight:700;
     border-radius:12px;
     padding:12px;
+    font-weight:700;
 }
-.btn-primary:hover{background:#2563eb;}
 
-a{color:var(--primary);text-decoration:none;}
-a:hover{text-decoration:underline;}
-
-/* Toggle */
+/* toggle */
 #themeToggle{
     position:fixed;
     top:20px;
     left:20px;
-    z-index:9999;
     background:var(--primary);
-    color:white;
     border:none;
     width:44px;
     height:44px;
     border-radius:50%;
+    color:white;
     font-size:18px;
+    z-index:9999;
     cursor:pointer;
-    box-shadow:0 0 20px rgba(31,111,255,.5);
 }
 
-/* DARK MODE */
+/* dark */
 body.dark{
     background:radial-gradient(circle at top,#1e40af,#020617);
 }
-body.dark .bg-lines{
-    background:
-        repeating-linear-gradient(135deg,
-            rgba(255,255,255,.05) 0px,
-            rgba(255,255,255,.05) 1px,
-            transparent 1px,
-            transparent 16px);
-}
-body.dark .login-card{
-    background:rgba(255,255,255,.08);
-    backdrop-filter:blur(30px);
-    box-shadow:0 30px 80px rgba(0,0,0,.7);
-}
+body.dark .signup-card{background:rgba(255,255,255,.08);backdrop-filter:blur(30px);}
 body.dark h2{color:#7dd3fc;}
-body.dark .form-control{
-    background:rgba(255,255,255,.12);
-    color:white;
-    border:none;
-}
-body.dark .role-box{
-    background:rgba(0,0,0,.35);
-    color:#cbd5f5;
-}
-body.dark .role-box select{color:#7dd3fc;}
+body.dark .form-control{background:rgba(255,255,255,.12);color:white;border:none;}
 body.dark a{color:#7dd3fc;}
-body.dark .dino{
-    filter:drop-shadow(0 0 40px #38bdf8);
-}
-body.dark .dino span{
-    background:#38bdf8;
-    color:#020617;
-}
+body.dark .dino{filter:drop-shadow(0 0 40px #38bdf8);}
+body.dark .dino span{background:#38bdf8;color:#020617;}
 </style>
 </head>
 
@@ -238,31 +171,26 @@ body.dark .dino span{
 
 <div class="dino">🦖<span>CivicSewa</span></div>
 
-<div class="login-card">
+<div class="signup-card">
 <h2 onclick="location.href='index.html'">CivicSewa</h2>
 
-<div class="role-box">
-    <span>Sign in as</span>
-    <select id="role">
-        <option value="citizen">Citizen</option>
-        <option value="admin">Ward Admin</option>
-    </select>
-</div>
-
 <form>
-    <input type="email" id="loginEmail" class="form-control mb-3" placeholder="Email" required>
-    <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password" required>
+    <input id="fullName" class="form-control mb-3" placeholder="Full Name" required>
+    <input id="ward" class="form-control mb-3" placeholder="Ward Number">
+    <input id="muni" class="form-control mb-3" placeholder="Municipality">
 
-    <div class="d-flex justify-content-between mb-3">
-        <a href="forgot.html">Forgot password?</a>
-        <a href="signup.html">Create account</a>
-    </div>
+    <input id="regEmail" class="form-control mb-3" type="email" placeholder="Email" required>
+    <input id="regPass" class="form-control mb-3" type="password" placeholder="Password" required>
 
-    <button type="button" id="loginBtn" class="btn btn-primary w-100">
-        Login
+    <button type="button" id="registerBtn" class="btn btn-primary w-100">
+        Create Account
     </button>
 </form>
 
+
+<div class="text-center mt-3">
+    <a href="login.html">Already have an account?</a>
+</div>
 </div>
 
 <script>
@@ -272,16 +200,12 @@ const flip=document.getElementById("themeFlip");
 
 toggle.onclick=()=>{
     flip.classList.add("active");
-
     setTimeout(()=>{
         document.body.classList.toggle("dark");
         toggle.innerText=document.body.classList.contains("dark")?"☀️":"🌙";
         localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
     },300);
-
-    setTimeout(()=>{
-        flip.classList.remove("active");
-    },600);
+    setTimeout(()=>flip.classList.remove("active"),600);
 };
 
 if(localStorage.getItem("theme")==="dark"){
@@ -290,9 +214,7 @@ if(localStorage.getItem("theme")==="dark"){
 }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="auth-check.js"></script>
-
+</body>
 <div class="modal fade" id="verificationModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content p-4 text-center">
@@ -308,6 +230,4 @@ if(localStorage.getItem("theme")==="dark"){
   </div>
 </div>
 
-</body>
 </html>
-
