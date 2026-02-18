@@ -1,0 +1,33 @@
+/* FORCE THEME SWITCH */
+body {
+  transition: background 0.4s ease, color 0.3s ease;
+}
+
+/* LIGHT */
+body {
+  background: #dcecf1 !important;
+  color: #0f172a !important;
+}
+
+/* DARK */
+body.dark {
+  background: linear-gradient(135deg, #0b1c3f, #102b6a) !important;
+  color: #e0f2fe !important;
+}
+
+/* Sidebar */
+body.dark .sidebar {
+  background: #0f1e4a !important;
+}
+
+/* Topbar */
+body.dark .topbar {
+  background: #132c6b !important;
+}
+
+/* Cards */
+body.dark .card {
+  background: rgba(255,255,255,0.08) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+}

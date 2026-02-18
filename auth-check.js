@@ -28,25 +28,25 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Login Logic
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value;
-  const pass = document.getElementById("loginPassword").value;
-  try {
-    const userCred = await signInWithEmailAndPassword(auth, email, pass);
-    // Check if email is verified
-    await userCred.user.reload();
-    if (!userCred.user.emailVerified) {
-      alert("Please verify your email before logging in. Check your inbox for the verification link.");
-      auth.signOut();
-      return;
+const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPassword").value;
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, pass);
+      await userCred.user.reload();
+      if (!userCred.user.emailVerified) {
+        alert("Please verify your email before logging in.");
+        auth.signOut();
+        return;
+      }
+      window.location.href = "dashboard.html";
+    } catch (e) {
+      alert("Login Error: " + e.message);
     }
-    // Email is verified, redirect to dashboard
-    window.location.href = "dashboard.html";
-  } catch (e) {
-    console.error("Login Error:", e);
-    alert("Login Error: " + e.message);
-  }
-});
+  });
+}
 
 // Register Logic
 document.getElementById("registerBtn").addEventListener("click", async () => {
@@ -59,14 +59,15 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
   if (!email || !pass) return alert("Please provide email and password.");
 
   try {
+    // 1. Create the user
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     console.log("User created:", cred.user.uid);
     
-    // Send email verification
+    // 2. Send verification email immediately
     await sendEmailVerification(cred.user);
-    console.log("Verification email sent to:", email);
     
-    // Save user data to Firestore
+    // 3. Save user data to Firestore
+    // We do this BEFORE showing the modal to ensure data integrity
     await setDoc(doc(db, "users", cred.user.uid), {
       fullName: name || "",
       wardNumber: ward || "",
@@ -74,35 +75,18 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
       email: email,
       emailVerified: false,
     });
-    console.log("User document written for:", cred.user.uid);
     
-    // Show verification modal
+    
+    // 4. Trigger the UI feedback
     document.getElementById("verifyEmail").textContent = email;
     const verificationModal = new bootstrap.Modal(document.getElementById("verificationModal"));
     verificationModal.show();
     
-    // Clear form
-    document.getElementById("fullName").value = "";
-    document.getElementById("ward").value = "";
-    document.getElementById("muni").value = "";
-    document.getElementById("regEmail").value = "";
-    document.getElementById("regPass").value = "";
+    // 5. Reset the form
+    document.querySelector("form").reset(); 
+
   } catch (e) {
     console.error("Registration Error:", e);
     alert("Registration Error: " + e.message);
-  }
-});
-
-// Resend verification email
-document.getElementById("resendBtn").addEventListener("click", async () => {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    try {
-      await sendEmailVerification(currentUser);
-      alert("Verification email resent successfully!");
-    } catch (e) {
-      console.error("Resend Error:", e);
-      alert("Error: " + e.message);
-    }
   }
 });
