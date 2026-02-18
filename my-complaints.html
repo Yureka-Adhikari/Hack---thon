@@ -23,6 +23,82 @@
             background: -webkit-linear-gradient(to right, rgba(48,207,208,1), rgba(51,8,103,1));
             background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
         }
+        /* Page Background */
+body {
+  background-color: #f4f6f9;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Section Title */
+h2 {
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+/* Complaint Card */
+.complaint-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease;
+}
+
+.complaint-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Title */
+.complaint-card h4 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Status Badge */
+.status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.status.Submitted {
+  background-color: #0d6efd;
+}
+
+.status.InProgress {
+  background-color: #ffc107;
+  color: black;
+}
+
+.status.Resolved {
+  background-color: #198754;
+}
+
+.status.Rejected {
+  background-color: #dc3545;
+}
+
+/* Button */
+.complaint-card button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.complaint-card button:hover {
+  background-color: #084298;
+}
+
     </style>
 </head>
 <body>
