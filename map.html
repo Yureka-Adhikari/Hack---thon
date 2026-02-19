@@ -1,0 +1,1005 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pls send help - Road & Issue Map</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #2A4B79;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            margin: 4px 15px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            height: calc(100vh - 70px);
+            width: 100%;
+            z-index: 1;
+        }
+
+        .map-search {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .map-search input {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            font-size: 14px;
+        }
+
+        .map-search input:focus {
+            outline: none;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+
+        .map-filters {
+            position: absolute;
+            top: 90px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 280px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section h6 {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .filter-item:hover {
+            opacity: 0.8;
+        }
+
+        .legend-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 12px;
+            color: white;
+            font-size: 14px;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Issue Type Colors */
+        .marker-road { background-color: #dc3545; }
+        .marker-water { background-color: #0d6efd; }
+        .marker-electricity { background-color: #ffc107; color: #000; }
+        .marker-sanitation { background-color: #198754; }
+        .marker-other { background-color: #6c757d; }
+        .marker-user { background-color: #9b59b6; }
+
+        /* Custom Marker Styles */
+        .custom-marker {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .custom-marker:hover {
+            transform: scale(1.1);
+        }
+
+        .user-marker {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: #9b59b6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border: 4px solid white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(155, 89, 182, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0); }
+        }
+
+        /* Popup Styles */
+        .issue-popup {
+            min-width: 280px;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .popup-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .popup-title h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .popup-title span {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .popup-content {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .popup-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .popup-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .popup-status.in-progress {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .popup-status.resolved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        /* Locate Button */
+        .locate-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 320px;
+            z-index: 1000;
+            background-color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #2c3e50;
+            transition: all 0.3s;
+        }
+
+        .locate-btn:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        /* Legend Panel */
+        .legend-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .legend-icon-sm {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            #sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .map-filters {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+                top: auto;
+                bottom: 100px;
+            }
+            .map-search {
+                top: 80px;
+            }
+            .locate-btn {
+                right: 20px;
+                bottom: 100px;
+            }
+            .legend-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div id="sidebar" class="d-flex flex-column p-3">
+            <h3 class="p-3 fw-bold"><i class="bi bi-map-fill me-2"></i>Pls send help</h3>
+            <hr>
+            <ul class="nav nav-pills flex-column flex-grow-1">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a>
+                </li>
+                <li>
+                    <a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a>
+                </li>
+                <li>
+                    <a href="Broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a>
+                </li>
+                <li>
+                    <a href="road.html" class="nav-link active"><i class="bi bi-signpost-2 me-2"></i> Road Map</a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a>
+                </li>
+            </ul>
+            <hr>
+            <button id="logoutBtn" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand shadow-sm p-3 bg-white" style="height: 70px;">
+                <div class="container-fluid">
+                    <h4 class="mb-0"><i class="bi bi-geo-alt-fill me-2 text-primary"></i>Issue Map</h4>
+                    <div class="ms-auto d-flex align-items-center gap-3">
+                        <span class="badge bg-primary" id="uWard">Ward --</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <strong id="uNameTop">User Name</strong>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Map Container -->
+            <div style="position: relative; flex-grow: 1;">
+                <!-- Map Search -->
+                <div class="map-search">
+                    <input type="text" id="searchInput" placeholder="Search for issues, location...">
+                </div>
+
+                <!-- Map -->
+                <div id="map"></div>
+
+                <!-- Filters Panel -->
+                <div class="map-filters">
+                    <div class="filter-header">
+                        <h5><i class="bi bi-funnel-fill me-2"></i>Filter</h5>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h6>Issue Types</h6>
+                        <div class="filter-item">
+                            <input class="form-check-input me-2" type="checkbox" value="road" id="filterRoad" checked>
+                            <label class="form-check-label d-flex align-items-center w-100" for="filterRoad">
+                                <span class="legend-icon marker-road"><i class="bi bi-cone-striped"></i></span>
+                                <span>Road Problems</span>
+                            </label>
+                        </div>
+                        <div class="filter-item">
+                            <input class="form-check-input me-2" type="checkbox" value="water" id="filterWater" checked>
+                            <label class="form-check-label d-flex align-items-center w-100" for="filterWater">
+                                <span class="legend-icon marker-water"><i class="bi bi-droplet-fill"></i></span>
+                                <span>Water Problems</span>
+                            </label>
+                        </div>
+                        <div class="filter-item">
+                            <input class="form-check-input me-2" type="checkbox" value="electricity" id="filterElectricity" checked>
+                            <label class="form-check-label d-flex align-items-center w-100" for="filterElectricity">
+                                <span class="legend-icon marker-electricity"><i class="bi bi-lightning-charge-fill"></i></span>
+                                <span>Electricity</span>
+                            </label>
+                        </div>
+                        <div class="filter-item">
+                            <input class="form-check-input me-2" type="checkbox" value="sanitation" id="filterSanitation" checked>
+                            <label class="form-check-label d-flex align-items-center w-100" for="filterSanitation">
+                                <span class="legend-icon marker-sanitation"><i class="bi bi-trash-fill"></i></span>
+                                <span>Sanitation</span>
+                            </label>
+                        </div>
+                        <div class="filter-item">
+                            <input class="form-check-input me-2" type="checkbox" value="other" id="filterOther" checked>
+                            <label class="form-check-label d-flex align-items-center w-100" for="filterOther">
+                                <span class="legend-icon marker-other"><i class="bi bi-exclamation-circle-fill"></i></span>
+                                <span>Other Issues</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <h6>Wards</h6>
+                        <select class="form-select form-select-sm" id="wardSelect">
+                            <option value="all" selected>All Wards</option>
+                            <option value="1">Ward 1</option>
+                            <option value="2">Ward 2</option>
+                            <option value="3">Ward 3</option>
+                            <option value="4">Ward 4</option>
+                            <option value="5">Ward 5</option>
+                            <option value="5">Ward 6</option>
+                            <option value="5">Ward 7</option>
+                            <option value="5">Ward 8</option>
+                            <option value="5">Ward 9</option>
+                            <option value="5">Ward 10</option>
+                            <option value="5">Ward 11</option>
+                            <option value="5">Ward 12</option>
+                            <option value="5">Ward 13</option>
+                            <option value="5">Ward 14</option>
+                            <option value="5">Ward 15</option>
+                            <option value="5">Ward 16</option>
+                            <option value="5">Ward 17</option>
+                            <option value="5">Ward 18</option>
+                            <option value="5">Ward 19</option>
+                            <option value="5">Ward 20</option>
+                            <option value="5">Ward 21</option>
+                            <option value="5">Ward 22</option>
+                            <option value="5">Ward 23</option>
+                            <option value="5">Ward 24</option>
+                            <option value="5">Ward 25</option>
+                            <option value="5">Ward 26</option>
+                            <option value="5">Ward 27</option>
+                            <option value="5">Ward 28</option>
+                            <option value="5">Ward 29</option>
+                            <option value="5">Ward 30</option>
+                            <option value="5">Ward 31</option>
+                            <option value="5">Ward 32</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Legend Panel -->
+                <div class="legend-panel">
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-road"><i class="bi bi-cone-striped"></i></span>
+                        <span>Road</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-water"><i class="bi bi-droplet-fill"></i></span>
+                        <span>Water</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-electricity"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <span>Electricity</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-sanitation"><i class="bi bi-trash-fill"></i></span>
+                        <span>Sanitation</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-other"><i class="bi bi-exclamation-circle-fill"></i></span>
+                        <span>Other</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon-sm marker-user"><i class="bi bi-person-fill"></i></span>
+                        <span>You</span>
+                    </div>
+                </div>
+
+                <!-- Locate Me Button -->
+                <button class="locate-btn" id="locateBtn" title="Find my location">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([27.7172, 85.3240], 13);
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Store markers
+        const markers = [];
+        let userMarker = null;
+        let userCircle = null;
+
+        // Issue configurations
+        const issueConfig = {
+            road: { 
+                icon: 'bi-cone-striped', 
+                color: '#dc3545', 
+                label: 'Road Problems',
+                bgClass: 'marker-road'
+            },
+            water: { 
+                icon: 'bi-droplet-fill', 
+                color: '#0d6efd', 
+                label: 'Water Problems',
+                bgClass: 'marker-water'
+            },
+            electricity: { 
+                icon: 'bi-lightning-charge-fill', 
+                color: '#ffc107', 
+                label: 'Electricity',
+                bgClass: 'marker-electricity'
+            },
+            sanitation: { 
+                icon: 'bi-trash-fill', 
+                color: '#198754', 
+                label: 'Sanitation',
+                bgClass: 'marker-sanitation'
+            },
+            other: { 
+                icon: 'bi-exclamation-circle-fill', 
+                color: '#6c757d', 
+                label: 'Other Issues',
+                bgClass: 'marker-other'
+            }
+        };
+
+        // Sample issue data
+        const issues = [
+            {
+                id: 1,
+                type: 'road',
+                title: 'Large Pothole on Main Street',
+                description: 'Deep pothole causing vehicle damage and traffic congestion. Multiple complaints received.',
+                lat: 27.7172,
+                lng: 85.3240,
+                status: 'pending',
+                date: '2024-02-15',
+                ward: '1',
+                image: 'https://via.placeholder.com/300x150/dc3545/ffffff?text=Road+Damage'
+            },
+            {
+                id: 2,
+                type: 'water',
+                title: 'Water Pipe Burst',
+                description: 'Major water pipeline burst near residential area. Water flooding the street.',
+                lat: 27.7200,
+                lng: 85.3300,
+                status: 'in-progress',
+                date: '2024-02-14',
+                ward: '2',
+                image: 'https://via.placeholder.com/300x150/0d6efd/ffffff?text=Water+Leak'
+            },
+            {
+                id: 3,
+                type: 'electricity',
+                title: 'Street Lights Not Working',
+                description: 'Multiple street lights on Oak Avenue are not functioning. Safety concern at night.',
+                lat: 27.7150,
+                lng: 85.3180,
+                status: 'pending',
+                date: '2024-02-13',
+                ward: '1',
+                image: 'https://via.placeholder.com/300x150/ffc107/000000?text=Street+Light'
+            },
+            {
+                id: 4,
+                type: 'sanitation',
+                title: 'Garbage Collection Needed',
+                description: 'Trash accumulation in public park area. Bad smell affecting nearby residents.',
+                lat: 27.7220,
+                lng: 85.3150,
+                status: 'resolved',
+                date: '2024-02-12',
+                ward: '3',
+                image: 'https://via.placeholder.com/300x150/198754/ffffff?text=Garbage'
+            },
+            {
+                id: 5,
+                type: 'road',
+                title: 'Broken Traffic Signal',
+                description: 'Traffic light at intersection not working. Causing confusion for drivers.',
+                lat: 27.7180,
+                lng: 85.3280,
+                status: 'in-progress',
+                date: '2024-02-11',
+                ward: '2',
+                image: 'https://via.placeholder.com/300x150/dc3545/ffffff?text=Traffic+Signal'
+            },
+            {
+                id: 6,
+                type: 'electricity',
+                title: 'Power Outage - Block 4',
+                description: 'Intermittent power cuts reported throughout the neighborhood for past 3 days.',
+                lat: 27.7250,
+                lng: 85.3200,
+                status: 'pending',
+                date: '2024-02-10',
+                ward: '4',
+                image: 'https://via.placeholder.com/300x150/ffc107/000000?text=Power+Outage'
+            },
+            {
+                id: 7,
+                type: 'water',
+                title: 'Low Water Pressure',
+                description: 'Residents in sector 5 reporting very low water pressure during peak hours.',
+                lat: 27.7120,
+                lng: 85.3220,
+                status: 'pending',
+                date: '2024-02-09',
+                ward: '5',
+                image: 'https://via.placeholder.com/300x150/0d6efd/ffffff?text=Low+Pressure'
+            },
+            {
+                id: 8,
+                type: 'sanitation',
+                title: 'Sewage Overflow',
+                description: 'Sewage system overflow on residential street. Health hazard reported.',
+                lat: 27.7160,
+                lng: 85.3260,
+                status: 'in-progress',
+                date: '2024-02-08',
+                ward: '2',
+                image: 'https://via.placeholder.com/300x150/198754/ffffff?text=Sewage'
+            },
+            {
+                id: 9,
+                type: 'other',
+                title: 'Illegal Construction',
+                description: 'Unauthorized building construction reported. Safety concerns raised by neighbors.',
+                lat: 27.7190,
+                lng: 85.3320,
+                status: 'in-progress',
+                date: '2024-02-07',
+                ward: '3',
+                image: 'https://via.placeholder.com/300x150/6c757d/ffffff?text=Construction'
+            },
+            {
+                id: 10,
+                type: 'road',
+                title: 'Damaged Sidewalk',
+                description: 'Uneven and broken sidewalk tiles causing trip hazard for pedestrians.',
+                lat: 27.7230,
+                lng: 87.3190,
+                status: 'resolved',
+                date: '2024-02-06',
+                ward: '4',
+                image: 'https://via.placeholder.com/300x150/dc3545/ffffff?text=Sidewalk'
+            },
+            {
+                id: 11,
+                type: 'water',
+                title: 'Contaminated Water Supply',
+                description: 'Residents reporting discolored and foul-smelling tap water.',
+                lat: 27.7140,
+                lng: 85.3190,
+                status: 'pending',
+                date: '2024-02-05',
+                ward: '1',
+                image: 'https://via.placeholder.com/300x150/0d6efd/ffffff?text=Contaminated'
+            },
+            {
+                id: 12,
+                type: 'electricity',
+                title: 'Downed Power Line',
+                description: 'Power line down after storm. Emergency situation - area cordoned off.',
+                lat: 27.7210,
+                lng: 85.3250,
+                status: 'in-progress',
+                date: '2024-02-04',
+                ward: '2',
+                image: 'https://via.placeholder.com/300x150/ffc107/000000?text=Power+Line'
+            },
+            {
+                id: 13,
+                type: 'sanitation',
+                title: 'Broken Public Toilet',
+                description: 'Public restroom facility broken and unusable. Needs immediate repair.',
+                lat: 27.7185,
+                lng: 85.3210,
+                status: 'pending',
+                date: '2024-02-03',
+                ward: '3',
+                image: 'https://via.placeholder.com/300x150/198754/ffffff?text=Toilet'
+            },
+            {
+                id: 14,
+                type: 'other',
+                title: 'Noise Complaint',
+                description: 'Excessive construction noise during prohibited hours reported by residents.',
+                lat: 27.7205,
+                lng: 85.3170,
+                status: 'resolved',
+                date: '2024-02-02',
+                ward: '5',
+                image: 'https://via.placeholder.com/300x150/6c757d/ffffff?text=Noise'
+            },
+            {
+                id: 15,
+                type: 'road',
+                title: 'Flooded Road',
+                description: 'Road flooded after heavy rain. Vehicles getting stuck.',
+                lat: 27.7165,
+                lng: 85.3330,
+                status: 'in-progress',
+                date: '2024-02-01',
+                ward: '4',
+                image: 'https://via.placeholder.com/300x150/dc3545/ffffff?text=Flooded'
+            }
+        ];
+
+        // Create custom icon
+        function createCustomIcon(type) {
+            const config = issueConfig[type];
+            return L.divIcon({
+                className: 'custom-marker-wrapper',
+                html: `<div class="custom-marker ${config.bgClass}"><i class="bi ${config.icon}"></i></div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18],
+                popupAnchor: [0, -18]
+            });
+        }
+
+        // Add markers to map
+        function addMarkers() {
+            issues.forEach(issue => {
+                const config = issueConfig[issue.type];
+                const marker = L.marker([issue.lat, issue.lng], {
+                    icon: createCustomIcon(issue.type)
+                }).addTo(map);
+
+                // Create popup content
+                const popupContent = `
+                    <div class="issue-popup">
+                        <div class="popup-header">
+                            <div class="popup-icon ${config.bgClass}">
+                                <i class="bi ${config.icon}"></i>
+                            </div>
+                            <div class="popup-title">
+                                <h4>${issue.title}</h4>
+                                <span><i class="bi bi-calendar3 me-1"></i>${issue.date} | Ward ${issue.ward}</span>
+                            </div>
+                        </div>
+                        <div class="popup-content">
+                            <img src="${issue.image}" alt="${issue.title}" class="popup-image">
+                            <p>${issue.description}</p>
+                            <span class="popup-status ${issue.status}">${issue.status.replace('-', ' ')}</span>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+
+                markers.push({
+                    marker: marker,
+                    type: issue.type,
+                    ward: issue.ward,
+                    data: issue
+                });
+            });
+        }
+
+        // Initialize markers
+        addMarkers();
+
+        // Locate user function
+        function locateUser() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+
+            const btn = document.getElementById('locateBtn');
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    // Remove existing user marker and circle
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+                    if (userCircle) {
+                        map.removeLayer(userCircle);
+                    }
+
+                    // Create user location marker
+                    const userIcon = L.divIcon({
+                        className: 'user-marker-wrapper',
+                        html: '<div class="user-marker"><i class="bi bi-person-fill"></i></div>',
+                        iconSize: [44, 44],
+                        iconAnchor: [22, 22]
+                    });
+
+                    userMarker = L.marker([lat, lng], { icon: userIcon })
+                        .addTo(map)
+                        .bindPopup('<b><i class="bi bi-person-fill me-2"></i>Your Location</b><br>Accuracy: ' + Math.round(accuracy) + 'm')
+                        .openPopup();
+
+                    // Add accuracy circle
+                    userCircle = L.circle([lat, lng], {
+                        radius: accuracy,
+                        color: '#9b59b6',
+                        fillColor: '#9b59b6',
+                        fillOpacity: 0.1,
+                        weight: 2
+                    }).addTo(map);
+
+                    // Pan to user location
+                    map.setView([lat, lng], 16);
+                    
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                },
+                (error) => {
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                    let errorMsg = 'Unable to retrieve your location';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Location access denied by user';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Location information unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Location request timed out';
+                            break;
+                    }
+                    alert(errorMsg);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Event listener for locate button
+        document.getElementById('locateBtn').addEventListener('click', locateUser);
+
+        // Filter functionality
+        function applyFilters() {
+            const checkedTypes = Array.from(document.querySelectorAll('.filter-item input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            const selectedWard = document.getElementById('wardSelect').value;
+
+            markers.forEach(item => {
+                const typeMatch = checkedTypes.includes(item.type);
+                const wardMatch = selectedWard === 'all' || item.ward === selectedWard;
+
+                if (typeMatch && wardMatch) {
+                    map.addLayer(item.marker);
+                } else {
+                    map.removeLayer(item.marker);
+                }
+            });
+        }
+
+        // Add event listeners for filters
+        document.querySelectorAll('.filter-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+
+        document.getElementById('wardSelect').addEventListener('change', applyFilters);
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+
+            markers.forEach(item => {
+                const issue = item.data;
+                const match = issue.title.toLowerCase().includes(searchTerm) ||
+                              issue.description.toLowerCase().includes(searchTerm) ||
+                              issue.type.toLowerCase().includes(searchTerm) ||
+                              issue.ward.includes(searchTerm);
+
+                if (match || searchTerm === '') {
+                    map.addLayer(item.marker);
+                } else {
+                    map.removeLayer(item.marker);
+                }
+            });
+        });
+
+        // Try to get user location on page load
+        window.addEventListener('load', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        const userIcon = L.divIcon({
+                            className: 'user-marker-wrapper',
+                            html: '<div class="user-marker"><i class="bi bi-person-fill"></i></div>',
+                            iconSize: [44, 44],
+                            iconAnchor: [22, 22]
+                        });
+
+                        userMarker = L.marker([lat, lng], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup('<b><i class="bi bi-person-fill me-2"></i>Your Location</b>');
+
+                        // Center map but keep zoom level reasonable
+                        map.setView([lat, lng], 14);
+                    },
+                    (error) => {
+                        console.log('Could not get location on load:', error.message);
+                    }
+                );
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to sign out?')) {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
