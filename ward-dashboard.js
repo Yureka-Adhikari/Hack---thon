@@ -58,7 +58,92 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("latestTitle").innerText = "No complaints yet.";
         document.getElementById("latestStatus").innerText = "-";
         document.getElementById("latestCategory").innerText = "-";
-    }});
+    }
+    // Load all complaints on dashboard
+    loadComplaints();
+    // Setup alert button after auth is complete
+    setupAlertButton();
+});
+
+// ================= SETUP ALERT BUTTON =================
+function setupAlertButton() {
+    const postBtn = document.getElementById("postBtn");
+    if (postBtn) {
+        postBtn.addEventListener("click", async () => {
+            if (!currentUser) {
+                alert("Please wait for authentication.");
+                return;
+            }
+            const title = document.getElementById("alertTitle").value.trim();
+            const category = document.getElementById("alertCategory").value;
+            const description = document.getElementById("alertDescription").value.trim();
+            const emergency = document.getElementById("alertEmergency").checked;
+
+            if (!title || !description) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "ward-broadcasts"), {
+                    title,
+                    category,
+                    description,
+                    emergency,
+                    ward: userWard,
+                    municipality: userMunicipality,
+                    userId: currentUser.uid,
+                    createdAt: serverTimestamp(),
+                });
+                alert("Alert sent successfully!");
+                // Clear form
+                document.getElementById("alertTitle").value = "";
+                document.getElementById("alertDescription").value = "";
+                document.getElementById("alertEmergency").checked = false;
+            } catch (error) {
+                console.error("Error sending alert:", error);
+                alert("Failed to send alert. Please try again.");
+            }
+        });
+    } else {
+        console.error("Post button not found!");
+    }
+}
+
+// ================= LOAD COMPLAINTS =================
+async function loadComplaints() {
+    const container = document.getElementById("complaintsContainer");
+    if (!container) return;
+    container.innerHTML = "";
+    const q = query(
+        collection(db, "complaints"),
+        where("userId", "==", currentUser.uid),
+        orderBy("createdAt", "desc"),
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+        container.innerHTML = "<p class='text-muted'>No complaints yet.</p>";
+        return;
+    }
+    snapshot.forEach((docSnap) => {
+        const complaint = docSnap.data();
+        const statusBg = complaint.status === "Open" ? "status-open text-white" : 
+                        complaint.status === "In Progress" ? "status-progress" : "status-resolved text-white";
+        container.innerHTML += `
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-semibold">${complaint.title}</div>
+                <small class="text-muted">${complaint.createdAt ? complaint.createdAt.toDate().toLocaleString() : ""}</small>
+            </div>
+            <span class="badge ${statusBg}">${complaint.status}</span>
+        </div>
+        <hr>
+        `;
+    });
+}
+
+
+
 
 // LOGOUT
 document.getElementById("logoutBtn").addEventListener("click", () => {

@@ -171,12 +171,9 @@ hr{
         <h3 class="p-3 fw-bold">CivicSewa</h3>
         <hr>
         <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-<li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
-            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
-            <li><a href="Broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
-            <li><a href="#" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
-            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> Guidance Chatbot </a></li>
+<li class="nav-item"><a href="ward-dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> Ward Complaints</a></li>
+            <li><a href="ward-broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
             <li><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
         </ul>
         <hr>
@@ -284,17 +281,17 @@ hr{
     <div class="card-custom" style="background-color: #EAEAEA;">
         <h5 class="fw-bold text-primary mb-4">Send an Alert</h5>
         <form>
-            <input type="text" class="form-control mb-3" placeholder="Title">
-            <select class="form-select mb-3">
+            <input type="text" id="alertTitle" class="form-control mb-3" placeholder="Title">
+            <select id="alertCategory" class="form-select mb-3">
                 <option>Water</option>
                 <option>Road</option>
                 <option>Waste</option>
                 <option>Electricity</option>
                 <option>Other</option>
             </select>
-            <textarea class="form-control mb-3" rows="4" placeholder="Description"></textarea>
-            <input type="checkbox"> Mark as Emergency
-            <button class="btn btn-primary w-100">Send Alert</button>
+            <textarea id="alertDescription" class="form-control mb-3" rows="4" placeholder="Description"></textarea>
+            <input type="checkbox" id="alertEmergency"> Mark as Emergency
+            <button type="button" id="postBtn" class="btn btn-primary w-100">Send Alert</button>
         </form>
     </div>
 </div>
@@ -307,33 +304,7 @@ hr{
 <div class="col-md-6">
     <div class="card-custom scroll-card">
         <h5 class="fw-semibold mb-4">Recent Complaints</h5>
-
-        <div class="d-flex justify-content-between">
-            <div>
-                <div class="fw-semibold">Water Leakage</div>
-                <small class="text-muted">Reported 2 hours ago</small>
-            </div>
-            <span class="badge status-open text-white">Open</span>
-        </div>
-        <hr>
-
-        <div class="d-flex justify-content-between">
-            <div>
-                <div class="fw-semibold">Road Crack</div>
-                <small class="text-muted">Reported yesterday</small>
-            </div>
-            <span class="badge status-progress">In Progress</span>
-        </div>
-        <hr>
-
-        <div class="d-flex justify-content-between">
-            <div>
-                <div class="fw-semibold">Garbage Overflow</div>
-                <small class="text-muted">Resolved 3 days ago</small>
-            </div>
-            <span class="badge status-resolved text-white">Resolved</span>
-        </div>
-
+        <div id="complaintsContainer"></div>
     </div>
 </div>
 
@@ -382,7 +353,7 @@ new Chart(document.getElementById('pieChart'),{
 });
 </script>
 
-<script src="ward-dashboard.js"></script>
+<script type="module" src="ward-dashboard.js"></script>
 
 </body>
 </html>

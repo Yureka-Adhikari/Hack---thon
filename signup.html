@@ -176,6 +176,11 @@ body.dark .dino span{background:#38bdf8;color:#020617;}
 
 <form>
     <input id="fullName" class="form-control mb-3" placeholder="Full Name" required>
+    <label class="form-label visually-hidden" for="userType">User Type</label>
+    <select id="userType" class="form-select mb-3" required>
+        <option value="resident">Resident</option>
+        <option value="ward">Ward</option>
+    </select>
     <input id="ward" class="form-control mb-3" placeholder="Ward Number">
     <input id="muni" class="form-control mb-3" placeholder="Municipality">
 
