@@ -1,6 +1,4 @@
-// ===============================
-// Firebase Imports
-// ===============================
+// ward-broadcast.js
 
 import { db } from "./firebase-config.js";
 
@@ -13,36 +11,24 @@ import {
   query,
   orderBy,
   serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// ===============================
-// WAIT FOR DOM TO LOAD
-// ===============================
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("broadcastContainer");
   const postBtn = document.getElementById("postBtn");
 
-  if (!container) {
-    console.error("broadcastContainer not found in HTML.");
+  if (!container || !postBtn) {
+    console.error("Required elements not found in HTML.");
     return;
   }
 
-  if (!postBtn) {
-    console.error("postBtn not found in HTML.");
-    return;
-  }
-
-  // ===============================
-  // LOAD BROADCASTS
-  // ===============================
-
+  // ================= LOAD =================
   async function loadBroadcasts() {
     try {
       container.innerHTML = "";
 
       const q = query(
-        collection(db, "ward-broadcasts"), // make sure this matches your collection name
+        collection(db, "ward-broadcasts"),
         orderBy("date", "desc"),
       );
 
@@ -52,28 +38,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const post = docSnap.data();
 
         container.innerHTML += `
-          <div class="col-md-4 fade-in">
+          <div class="col-md-4 mb-4">
             <div class="broadcast-card ${post.emergency ? "emergency" : ""}">
-              
               <button class="btn btn-sm btn-danger delete-btn"
                 onclick="window.deleteBroadcast('${docSnap.id}')">
-                <i class="bi bi-trash"></i>
+                Delete
               </button>
 
-              ${
-                post.emergency
-                  ? `<span class="badge bg-danger mb-2">Emergency</span>`
-                  : ""
-              }
+              ${post.emergency ? `<span class="badge bg-danger mb-2">Emergency</span>` : ""}
 
-              <h5 class="fw-semibold mb-1">${post.title}</h5>
-
-              <small class="text-muted d-block mb-2">
-                <i class="bi bi-clock me-1"></i>
-                ${post.date ? post.date.toDate().toLocaleString() : "Just now"}
+              <h5>${post.title}</h5>
+              <small class="text-muted">
+                ${post.date ? post.date.toDate().toLocaleString() : ""}
               </small>
 
-              <p class="mb-0">${post.content}</p>
+              <p>${post.content}</p>
             </div>
           </div>
         `;
@@ -83,10 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===============================
-  // CREATE BROADCAST
-  // ===============================
-
+  // ================= CREATE =================
   postBtn.addEventListener("click", async () => {
     try {
       const title = document.getElementById("title").value.trim();
@@ -94,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const emergency = document.getElementById("emergency").checked;
 
       if (!title || !content) {
-        alert("Please fill all fields.");
+        alert("Please fill all fields");
         return;
       }
 
@@ -105,27 +81,17 @@ document.addEventListener("DOMContentLoaded", () => {
         date: serverTimestamp(),
       });
 
-      // Reset form
       document.getElementById("title").value = "";
       document.getElementById("content").value = "";
       document.getElementById("emergency").checked = false;
 
-      // Close modal safely
-      const modalElement = document.getElementById("createModal");
-      const modal = bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
-
       loadBroadcasts();
     } catch (error) {
       console.error("Error creating broadcast:", error);
-      alert("Failed to post broadcast.");
     }
   });
 
-  // ===============================
-  // DELETE BROADCAST
-  // ===============================
-
+  // ================= DELETE =================
   window.deleteBroadcast = async function (id) {
     try {
       await deleteDoc(doc(db, "ward-broadcasts", id));
@@ -135,6 +101,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Initial load
   loadBroadcasts();
 });
