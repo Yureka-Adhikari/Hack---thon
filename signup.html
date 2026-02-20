@@ -176,7 +176,7 @@ body.dark .dino span{background:#38bdf8;color:#020617;}
 
 <form>
     <input id="fullName" class="form-control mb-3" placeholder="Full Name" required>
-    <label class="form-label visually-hidden" for="userType">User Type</label>
+    <label class="form-label visually-hidden" for="userType" >User Type</label>
     <select id="userType" class="form-select mb-3" required>
         <option value="resident">Resident</option>
         <option value="ward">Ward</option>
@@ -202,6 +202,7 @@ body.dark .dino span{background:#38bdf8;color:#020617;}
 
 const toggle=document.getElementById("themeToggle");
 const flip=document.getElementById("themeFlip");
+const toggle_user = document.getElementById("userType");
 
 toggle.onclick=()=>{
     flip.classList.add("active");
@@ -211,6 +212,15 @@ toggle.onclick=()=>{
         localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
     },300);
     setTimeout(()=>flip.classList.remove("active"),600);
+};
+
+toggle_user.onchange = () => {
+    const wardFields = document.querySelectorAll("#ward, #muni");
+    if (toggle_user.value === "ward") {
+        wardFields.forEach(field => field.style.display = "block");
+    } else {
+        wardFields.forEach(field => field.style.display = "none");
+    }
 };
 
 if(localStorage.getItem("theme")==="dark"){
@@ -237,6 +247,8 @@ if(localStorage.getItem("theme")==="dark"){
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="auth-check.js"></script>
+
+
 </body>
 </html>
 

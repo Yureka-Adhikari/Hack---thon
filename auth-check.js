@@ -95,7 +95,7 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
   const name = document.getElementById("fullName").value;
   const ward = document.getElementById("ward").value;
   const muni = document.getElementById("muni").value;
-  let userTypeElem = document.getElementById("userType");
+  const userTypeElem = document.getElementById("userType");
   let userType = userTypeElem ? userTypeElem.value.toString().toLowerCase() : "resident";
   if (userType !== "ward" && userType !== "resident") userType = "resident";
   console.log("Register: userType element:", userTypeElem, "value:", userType);
