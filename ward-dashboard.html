@@ -2,327 +2,387 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CivicSewa – Ward Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CivicSewa Dashboard</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 body{
     font-family:'Inter',sans-serif;
-    background:#edf3f9;
+    background:#AFC3CC;
     margin:0;
 }
 
 /* Sidebar */
-.sidebar{
-    height:100vh;
-    background:#1f4172;
+#sidebar{
+    width:260px;
+    background:#355C8A;
     color:white;
-    position:fixed;
-    width:240px;
-    padding-top:20px;
 }
-.sidebar h4{
-    text-align:center;
-    font-weight:700;
+#sidebar .nav-link{
+    color:#e6edf5;
+    border-radius:12px;
+    padding:10px 14px;
+    margin:6px 0;
 }
-.sidebar a{
-    display:block;
+#sidebar .nav-link.active,
+#sidebar .nav-link:hover{
+    background:#1E63D5;
     color:white;
-    padding:12px 20px;
-    text-decoration:none;
-    opacity:0.85;
-    border-radius:10px;
-    margin:6px 12px;
-    transition:0.2s;
 }
-.sidebar a:hover,
-.sidebar a.active{
-    background:#1f6dff;
-    opacity:1;
+
+/* Navbar */
+.navbar{
+    background:#355C8A;
 }
 
 /* Main */
-.main{
-    margin-left:240px;
-    padding:30px;
+.main-content{
+    padding:40px 50px;
 }
 
-/* Topbar */
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:30px;
-}
-.search input{
-    border-radius:12px;
-    border:1px solid #e2e8f0;
-    padding:10px 15px;
-}
-.ward-badge{
-    background:white;
-    padding:8px 15px;
-    border-radius:12px;
-    font-weight:600;
-    box-shadow:0 4px 12px rgba(0,0,0,0.06);
-}
-
-/* KPI */
+/* KPI Cards */
 .kpi-card{
-    border-radius:20px;
-    padding:24px;
-    color:white;
-    box-shadow:0 8px 22px rgba(0,0,0,0.06);
-    transition:0.3s;
-}
-.kpi-card:hover{ transform:translateY(-5px); }
-.kpi-card h2{ font-weight:700; }
-.kpi-1{background:#1f6dff;}
-.kpi-2{background:#198754;}
-.kpi-3{background:#ffc107;color:#222;}
-.kpi-4{background:#dc3545;}
 
-/* Cards */
-.card{
     border:none;
-    border-radius:20px;
-    box-shadow:0 8px 22px rgba(0,0,0,0.06);
+    border-radius:22px;
+    padding:25px;
+    text-align:center;
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+}
+.kpi-card h3{
+    font-weight:700;
 }
 
-/* Status */
-.status{
-    padding:6px 12px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:600;
+/* Main Cards */
+.card-custom{
+    background:#F2F2F2;
+    border:none;
+    border-radius:22px;
+    padding:30px;
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+    height:100%;
 }
-.open{background:#dbeafe;color:#1d4ed8;}
-.progress{background:#fef3c7;color:#92400e;}
-.resolved{background:#dcfce7;color:#166534;}
 
-/* Updates */
-.update{
-    border-left:4px solid;
-    transition:0.3s;
+/* Scroll */
+.scroll-card{
+    max-height:340px;
+    overflow-y:auto;
 }
-.update:hover{
-    background:#f0f6ff;
-    transform:translateX(4px);
-}
-.water{border-color:#0d6efd;}
-.road{border-color:#dc3545;}
-.waste{border-color:#198754;}
-.general{border-color:#6f42c1;}
 
-/* Emergency */
-.emergency{
+/* Emergency Strip */
+/* Emergency Header */
+.emergency-header {
+    background: #E0353B;
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+    padding: 18px 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+/* Emergency Card */
+.emergency-card {
+    background: #EAEAEA;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+}
+
+/* Red left border */
+.emergency-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20px;
+    bottom: 20px;
+    width: 6px;
+    background: #E0353B;
+    border-radius: 10px;
+}
+
+/* Scrollable list */
+.emergency-list {
+    list-style: none;
+    padding-left: 20px;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Emergency Item */
+.emergency-item {
+    padding: 12px 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Red Emergency Badge */
+.badge-emergency {
+    background: #E0353B;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+/* Status Badges */
+.status-open{ background:#1E63D5; height: 20px;}
+.status-progress{ background:#F4B400; color:black; height: 20px;}
+.status-resolved{ background:#1FA463; height:20px;}
+
+/* Update Left Borders */
+.update-item{
+    padding:12px 12px 12px 16px;
+    margin-bottom:12px;
+    border-left:6px solid;
+    border-radius:8px;
     background:white;
-    border-left:6px solid #dc2626;
-    padding:18px;
-    border-radius:20px;
-    box-shadow:0 8px 22px rgba(0,0,0,0.06);
 }
-.emergency strong{ color:#dc2626; }
+.update-water{ border-color:#1E63D5; }
+.update-road{ border-color:#DC3545; }
+.update-waste{ border-color:#1FA463; }
 
-.table thead{ background:#f1f5f9; }
+.badge{
+    padding:6px 10px;
+    border-radius:10px;
+    font-size:12px;
+}
+hr{
+    margin:15px 0;
+}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-    <h4>CivicSewa</h4>
-    <a class="active">Dashboard</a>
-    <a>Complaints</a>
-    <a>Residents</a>
-    <a>Services</a>
-    <a>Reports</a>
-    <a>Settings</a>
+<div class="d-flex" style="background-color: #98b8ce">
+
+<!-- SIDEBAR -->
+<div class="d-flex">
+    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
+        <h3 class="p-3 fw-bold">CivicSewa</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
+<li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
+            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
+            <li><a href="Broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
+            <li><a href="#" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
+            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> Guidance Chatbot </a></li>
+            <li><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
+        </ul>
+        <hr>
+        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
+    </div>
+
+<!-- MAIN -->
+<div class="flex-grow-1" style="margin-left:260px; min-height:100vh;">
+
+<div class="flex-grow-1 flex-column" style="background-color:#2A4B79;color: white; min-height:10px;">
+        <nav class="navbar navbar-expand shadow-sm p-3">
+            <div class="container-fluid">
+                <input type="text" class="form-control w-25" placeholder="Search...">
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="badge bg-primary me-3" id="uWard">Ward --</span>
+                    <strong id="uNameTop">User Name</strong>
+                </div>
+                
+            </div>
+        </nav>
+        </div>
+
+<div class="row g-4 mb-4" style="margin: 10px;">
+
+    <div class="col-md-3">
+        <div class="kpi-card" style="background-color: #1E63D5; color:gainsboro">
+            <h2>128</h2>
+            <p>Open Complaints</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="kpi-card" style="background-color: #01a61a; color:gainsboro;">
+            <h2>86</h2>
+            <p>Resolved This Month</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="kpi-card" style="color:gainsboro; background-color:#e1a502;">
+            <h2>32</h2>
+            <p>In Progress</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="kpi-card" style="background-color: #DC3545; color:gainsboro;">
+            <h2>14</h2>
+            <p>High Priority</p>
+        </div>
+    </div>
+
+</div>
+<!-- ROW 1 -->
+<div class="row g-4 mb-4" style="margin: 10px;">
+
+<div class="col-md-4">
+    <div class="card-custom">
+        <h5 class="fw-semibold mb-3">Status Distribution</h5>
+        <div style="height:250px;">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
 </div>
 
-<div class="main">
+<div class="col-md-4 card-custom" style="background-color: #EAEAEA;">
 
-    <div class="topbar">
-        <div class="search">
-            <input class="form-control" placeholder="Search complaints, residents...">
-        </div>
-        <div class="ward-badge">Ward 5</div>
+    <!-- Emergency Header -->
+    <div class="emergency-header">
+        Emergency Alerts
     </div>
 
-    <!-- KPI -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="kpi-card kpi-1">
-                <h2>128</h2>
-                <p>Open Complaints</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card kpi-2">
-                <h2>86</h2>
-                <p>Resolved This Month</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card kpi-3">
-                <h2>32</h2>
-                <p>In Progress</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card kpi-4">
-                <h2>14</h2>
-                <p>High Priority</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-
-<!-- Left -->
-<div class="col-md-7">
-
-    <!-- Charts Row -->
-    <div class="row g-4 mb-4">
+    <!-- Emergency Content -->
+    <div class="emergency-card">
         
-    <!-- Line Chart -->
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h6>Monthly Trends</h6>
-            <div class="chart-container">
-                <canvas id="lineChart"></canvas>
-            </div>
-        </div>
-    </div>
+        <ul class="emergency-list" style="border: #cb1616; border-width:1px; border-style:dotted; border-radius:5px; padding:10px;">
+            
+            <li class="emergency-item">
+                <span class="badge-emergency">Emergency</span>
+                Road blocked due to landslide in Tole-3.
+            </li>
 
-    <!-- Pie Chart -->
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h6>Status Distribution</h6>
-            <div class="chart-container">
-                <canvas id="pieChart"></canvas>
-            </div>
-        </div>
-    </div>
+            <li class="emergency-item">
+                <span class="badge-emergency">Emergency</span>
+                Water pipeline burst near Ward-5.
+            </li>
 
+            <li class="emergency-item">
+                <span class="badge-emergency">Emergency</span>
+                Water pipeline burst near Ward-5.
+            </li>
 
-    </div>
+            <li class="emergency-item">
+                <span class="badge-emergency">Emergency</span>
+                Water pipeline burst near Ward-5.
+            </li>
 
-    <!-- Recent Complaints -->
-    <div class="card p-4">
-        <h5>Recent Complaints</h5>
-        <table class="table mt-3">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Road Damage</td>
-                    <td>Road</td>
-                    <td>Feb 18</td>
-                    <td><span class="status open">Open</span></td>
-                </tr>
-                <tr>
-                    <td>No Water</td>
-                    <td>Water</td>
-                    <td>Feb 16</td>
-                    <td><span class="status progress">In Progress</span></td>
-                </tr>
-                <tr>
-                    <td>Street Light Issue</td>
-                    <td>Electricity</td>
-                    <td>Feb 14</td>
-                    <td><span class="status resolved">Resolved</span></td>
-                </tr>
-            </tbody>
-        </table>
+        </ul>
+
     </div>
 
 </div>
 
-        <!-- Right -->
-        <div class="col-md-5">
-
-            <div class="card p-4 mb-4">
-                <h5>Complaint Status Distribution</h5>
-                <canvas id="pieChart"></canvas>
-            </div>
-
-            <!-- Recent Updates RESTORED -->
-            <div class="card p-4 mb-4">
-                <h5 class="mb-3">Recent Updates</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item update water">
-                        <span class="badge bg-primary me-2">Water</span>
-                        Water supply disruption on 5th Aug
-                    </li>
-                    <li class="list-group-item update road">
-                        <span class="badge bg-danger me-2">Road</span>
-                        Road repair work from 10th Aug
-                    </li>
-                    <li class="list-group-item update waste">
-                        <span class="badge bg-success me-2">Waste</span>
-                        Garbage collection schedule updated
-                    </li>
-                    <li class="list-group-item update general">
-                        <span class="badge bg-secondary me-2">General</span>
-                        Ward meeting on 15th Aug
-                    </li>
-                </ul>
-            </div>
-
-            <div class="emergency">
-                <strong>Emergency Alerts</strong><br>
-                Landslide reported in Tole 3<br>
-                Fire response team dispatched
-            </div>
-
-        </div>
+<div class="col-md-4 h-100" style="height:330px">
+    <div class="card-custom" style="background-color: #EAEAEA;">
+        <h5 class="fw-bold text-primary mb-4">Send an Alert</h5>
+        <form>
+            <input type="text" class="form-control mb-3" placeholder="Title">
+            <select class="form-select mb-3">
+                <option>Water</option>
+                <option>Road</option>
+                <option>Waste</option>
+                <option>Electricity</option>
+                <option>Other</option>
+            </select>
+            <textarea class="form-control mb-3" rows="4" placeholder="Description"></textarea>
+            <input type="checkbox"> Mark as Emergency
+            <button class="btn btn-primary w-100">Send Alert</button>
+        </form>
     </div>
+</div>
+
+</div>
+
+<!-- ROW 2 -->
+<div class="row g-4" style="margin: 10px;">
+
+<div class="col-md-6">
+    <div class="card-custom scroll-card">
+        <h5 class="fw-semibold mb-4">Recent Complaints</h5>
+
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-semibold">Water Leakage</div>
+                <small class="text-muted">Reported 2 hours ago</small>
+            </div>
+            <span class="badge status-open text-white">Open</span>
+        </div>
+        <hr>
+
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-semibold">Road Crack</div>
+                <small class="text-muted">Reported yesterday</small>
+            </div>
+            <span class="badge status-progress">In Progress</span>
+        </div>
+        <hr>
+
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="fw-semibold">Garbage Overflow</div>
+                <small class="text-muted">Resolved 3 days ago</small>
+            </div>
+            <span class="badge status-resolved text-white">Resolved</span>
+        </div>
+
+    </div>
+</div>
+
+<div class="col-md-6">
+    <div class="card-custom scroll-card">
+        <h5 class="fw-semibold mb-4">Recent Updates</h5>
+
+        <div class="update-item update-water">
+            <span class="badge bg-primary me-2">Water</span>
+            Water supply will be disrupted on 5th Aug.
+        </div>
+
+        <div class="update-item update-road">
+            <span class="badge bg-danger me-2">Road</span>
+            Road repair work starts from 10th Aug.
+        </div>
+
+        <div class="update-item update-waste">
+            <span class="badge bg-success me-2">Waste</span>
+            New waste collection schedule updated.
+        </div>
+
+    </div>
+</div>
+
+</div>
+
+</div>
+</div>
 </div>
 
 <script>
-new Chart(document.getElementById('lineChart'),{
-    type:'line',
-    data:{
-        labels:['Jan','Feb','Mar','Apr','May','Jun'],
-        datasets:[{
-            data:[65,90,75,110,95,130],
-            borderColor:'#1f6dff',
-            backgroundColor:'rgba(31,109,255,0.15)',
-            fill:true,
-            tension:0.4
-        }]
-    },
-    options:{
-        plugins:{legend:{display:false}},
-        maintainAspectRatio:false
-    }
-});
-
 new Chart(document.getElementById('pieChart'),{
     type:'pie',
     data:{
-        labels:['Open','In Progress','Resolved','High Priority'],
+        labels:['Open','In Progress','Resolved'],
         datasets:[{
-            data:[128,32,86,14],
-            backgroundColor:['#1f6dff','#ffc107','#198754','#dc3545']
+            data:[128,32,86],
+            backgroundColor:['#1E63D5','#F4B400','#1FA463']
         }]
     },
     options:{
+        responsive:true,
         maintainAspectRatio:false
     }
 });
 </script>
+
+<script src="ward-dashboard.js"></script>
 
 </body>
 </html>
