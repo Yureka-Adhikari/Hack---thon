@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicSewa - Ward Complaints</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #8ea9bb; font-family: 'Segoe UI', sans-serif; }
+        #sidebar { width: 260px; background-color: #2A4B79; color: white; position: fixed; height: 100vh; overflow-y: auto; }
+        #sidebar .nav-link { color: #dce6f3; border-radius: 10px; margin-bottom: 6px; padding: 10px 15px; }
+        #sidebar .nav-link.active { background-color: #1d3557; color: white; }
+        .main-content { margin-left: 260px; min-height: 100vh; }
+        .navbar { background: #2A4B79 !important; color: white; }
+        .complaint-card { background: white; border-radius: 15px; border: none; transition: 0.3s; }
+        .complaint-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .search-container { max-width: 500px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+    <div id="sidebar" class="d-flex flex-column p-3">
+        <h3 class="p-3 fw-bold">CivicSewa</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column flex-grow-1">
+            <li><a href="ward-dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="ward-complaints.html" class="nav-link active"><i class="bi bi-chat-dots me-2"></i> Ward Complaints</a></li>
+            <li><a href="ward-broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
+            <li><a href="ward-settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
+        </ul>
+        <hr>
+        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
+    </div>
+
+    <div class="flex-grow-1 main-content">
+        <nav class="navbar navbar-expand shadow-sm p-3">
+            <div class="container-fluid">
+                <span class="fw-bold me-4">WARD OFFICE PORTAL</span>
+                
+                <div class="search-container">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="searchInput" class="form-control border-0" placeholder="Search title, description or location...">
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid p-4">
+            <div class="row g-4" id="complaintContainer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="ward-complaints.js"></script>
+</body>
+</html>

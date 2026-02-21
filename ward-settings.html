@@ -28,13 +28,10 @@
         <h3 class="p-3 fw-bold">CivicSewa</h3>
         <hr>
         <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-            <li><a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
-            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
-            <li><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
-            <li><a href="road.html" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
-            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> Guidance Chatbot </a></li>
-            <li><a href="settings.html" class="nav-link active"><i class="bi bi-gear me-2"></i> Settings</a></li>
+            <li><a href="ward-dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="ward-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> Ward Complaints</a></li>
+            <li><a href="ward-broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
+            <li><a href="ward-settings.html" class="nav-link active"><i class="bi bi-gear me-2"></i> Settings</a></li>
         </ul>
         <hr>
         <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
@@ -67,10 +64,6 @@
                             <p class="mb-0 fw-medium" id="settingsEmail">—</p>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-muted small">Phone</label>
-                            <p class="mb-0 fw-medium" id="settingsPhone">—</p>
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label text-muted small">Ward Number</label>
                             <p class="mb-0 fw-medium" id="settingsWard">—</p>
                         </div>
@@ -81,27 +74,6 @@
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="card p-4 shadow-sm">
-                        <h5 class="mb-3"><i class="bi bi-bell me-2"></i>Email Notifications</h5>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifComplaints" checked>
-                            <label class="form-check-label" for="notifComplaints">Complaint updates</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifBroadcast" checked>
-                            <label class="form-check-label" for="notifBroadcast">Broadcast & announcements</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifEmergency">
-                            <label class="form-check-label" for="notifEmergency">Emergency alerts</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifEmail" checked>
-                            <label class="form-check-label" for="notifEmail">Email notifications</label>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="saveNotifBtn">Save Preferences</button>
-                    </div>
-
                     <div class="card p-4 shadow-sm mt-4">
                         <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Account & Privacy</h5>
                         <div class="mb-3">
@@ -118,6 +90,6 @@
 </div>
 
 
-<script type="module" src="settings.js"></script>
+<script type="module" src="ward-settings.js"></script>
 </body>
 </html>

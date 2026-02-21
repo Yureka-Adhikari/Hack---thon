@@ -75,14 +75,18 @@ body {
 
 <!-- SIDEBAR -->
 <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh;">
-    <h3 class="p-3 fw-bold">CivicSewa</h3>
-    <hr>
-    <ul class="nav nav-pills flex-column flex-grow-1">
-        <li><a href="ward-dashboard.html" class="nav-link">Dashboard</a></li>
-        <li><a href="ward-broadcast.html" class="nav-link active">Broadcast Channel</a></li>
-    </ul>
-    <hr>
-    <button class="btn btn-outline-light w-100">Sign Out</button>
+    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
+        <h3 class="p-3 fw-bold">CivicSewa</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
+            <li><a href="ward-dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
+            <li><a href="ward-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> Ward Complaints</a></li>
+            <li><a href="ward-broadcast.html" class="nav-link active"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
+            <li><a href="ward-settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
+        </ul>
+        <hr>
+        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
+    </div>
 </div>
 
 <!-- MAIN -->
