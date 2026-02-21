@@ -15,7 +15,7 @@ let attachedFile = null;
 let messages = [];
 
 // Initialize Google Generative AI
-const genAI = new GoogleGenerativeAI("AIzaSyBwrrVso7s5qtRfH8j_rinRfED38tDbyhs");
+const genAI = new GoogleGenerativeAI("");
 const model = genAI.getGenerativeModel({ 
   model: "gemini-2.5-flash",
   generationConfig: {
