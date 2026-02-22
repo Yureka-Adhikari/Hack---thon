@@ -255,17 +255,28 @@ async function sendMessage(){
     addMessage(reply,"bot");
 }
 
-/* AI RESPONSE using Firebase Vertex AI */
+/* AI RESPONSE using Google Generative AI */
 async function getAIResponse(text){
     try {
+        if (!model) {
+            console.error("Model not loaded!");
+            return "AI model is not loaded. Please refresh the page.";
+        }
+        
         const result = await model.generateContent(
             `You are CivicSewa AI assistant helping citizens of Nepal. Answer this: ${text}`
         );
-        const response = await result.response;
-        return response.text();
+        
+        if (!result.response) {
+            console.error("No response from model");
+            return "The AI did not provide a response. Please try again.";
+        }
+        
+        return result.response.text();
     } catch (error) {
         console.error("Error generating content:", error);
-        return "I encountered an issue. Please check your internet connection.";
+        console.error("Error details:", error.message);
+        return "I encountered an issue. Please check your internet connection or try again later.";
     }
 }
 
