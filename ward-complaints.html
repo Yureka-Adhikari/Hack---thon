@@ -16,6 +16,70 @@
         .complaint-card { background: white; border-radius: 15px; border: none; transition: 0.3s; }
         .complaint-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .search-container { max-width: 500px; width: 100%; }
+        /* Complaint Card */
+.complaint-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease;
+}
+
+.complaint-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Title */
+.complaint-card h4 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Button */
+.complaint-card button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.complaint-card button:hover {
+  background-color: #084298;
+}
+
+/* Status Badge */
+.status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.status.Submitted {
+  background-color: #0d6efd;
+}
+
+.status.InProgress {
+  background-color: #ffc107;
+  color: black;
+}
+
+.status.Resolved {
+  background-color: #198754;
+}
+
+.status.Rejected {
+  background-color: #dc3545;
+}
+
     </style>
 </head>
 <body>
@@ -48,9 +112,12 @@
             </div>
         </nav>
         <div class="container-fluid p-4">
-            <div class="row g-4" id="complaintContainer">
-            </div>
+            <div id="complaintsContainer" class="row g-4">
+                <!-- Complaint cards will be dynamically inserted here -->
+        <div class="complaint-card">
+          
         </div>
+        
     </div>
 </div>
 

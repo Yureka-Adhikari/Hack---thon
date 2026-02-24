@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = "";
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const id = docSnap.id;
+      const complaintId = docSnap.id;
       const date = data.createdAt?.toDate?.().toLocaleString() || "Syncing...";
 
       container.innerHTML += `
