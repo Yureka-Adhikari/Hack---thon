@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { auth, db } from "./firebase-config.js";
+import {
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -6,34 +10,61 @@ import {
   doc,
   updateDoc,
   query,
-  orderBy,
+  where,
   onSnapshot,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCWU1yZufweSez51pQptnr6ZX_FJZ3LKxc",
-  authDomain: "hack---a---thon-2026.firebaseapp.com",
-  projectId: "hack---a---thon-2026",
-  storageBucket: "hack---a---thon-2026.firebasestorage.app",
-  messagingSenderId: "566869340021",
-  appId: "1:566869340021:web:875343f6c99d165b602d3c",
-  measurementId: "G-CVEDYTDJT6",
-};
+let currentUserWard = "N/A";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    currentUserWard = data.wardNumber || "N/A";
+    console.log("Ward User Ward Number:", currentUserWard, "Type:", typeof currentUserWard);
+    loadComplaints();
+  } else {
+    console.log("User document not found!");
+  }
+});
 
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("complaintContainer");
-  if (!container) return;
+function loadComplaints() {
+  const container = document.getElementById("complaintsContainer");
+  if (!container) {
+    console.log("Container not found!");
+    return;
+  }
+  
+  console.log("Loading complaints for ward:", currentUserWard);
 
-  const q = query(collection(db, "complaints"), orderBy("createdAt", "desc"));
+  const q = query(
+    collection(db, "complaints"),
+    where("wardNumber", "==", currentUserWard)
+  );
 
   onSnapshot(q, (snapshot) => {
+    console.log("Snapshot received. Count:", snapshot.size);
+    const docs = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+    // Sort by createdAt descending on client-side
+    docs.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    console.log("Snapshot docs:", docs.map(d => ({
+      id: d.id,
+      wardNumber: d.wardNumber,
+      title: d.title
+    })));
+    
     container.innerHTML = "";
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      const complaintId = docSnap.id;
+    docs.forEach((data) => {
+      const complaintId = data.id;
       const date = data.createdAt?.toDate?.().toLocaleString() || "Syncing...";
 
       container.innerHTML += `
@@ -42,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <h5 class="fw-bold text-primary">${data.title}</h5>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteComplaint('${id}')"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteComplaint('${complaintId}')"><i class="bi bi-trash"></i></button>
                             </div>
                             <p class="text-muted small mb-2">From: ${data.userName || "Citizen"} | Ward: ${data.wardNumber}</p>
                             <p class="mb-1"><strong>Location:</strong> ${data.location}</p>
@@ -50,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <hr>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="badge ${getStatusClass(data.status)}">${data.status}</span>
-                                <select class="form-select form-select-sm w-50" onchange="updateStatus('${id}', this.value)">
+                                <select class="form-select form-select-sm w-50" onchange="updateStatus('${complaintId}', this.value)">
                                     <option value="" disabled selected>Update Status</option>
                                     <option value="Submitted">Submitted</option>
                                     <option value="InProgress">In Progress</option>
@@ -62,8 +93,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
     });
+    
+    if (snapshot.empty) {
+      container.innerHTML = "<p class='text-muted'>No complaints for this ward yet.</p>";
+    }
+  }, (error) => {
+    console.error("Query error:", error);
   });
-});
+}
 
 window.updateStatus = async (id, newStatus) => {
   try {
@@ -77,6 +114,10 @@ window.deleteComplaint = async (id) => {
   if (confirm("Remove this record?"))
     await deleteDoc(doc(db, "complaints", id));
 };
+
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  signOut(auth).then(() => (window.location.href = "login.html"));
+});
 
 function getStatusColor(s) {
   if (s === "Resolved") return "#198754";

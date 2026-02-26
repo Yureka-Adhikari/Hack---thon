@@ -30,16 +30,16 @@
         <h3 class="p-3 fw-bold">CivicSewa</h3>
         <hr>
         <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-<li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
-            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
-            <li><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
-            <li><a href="road.html" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
-            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> Guidance Chatbot </a></li>
-            <li><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> Settings</a></li>
+<li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> <span data-i18n="dashboardNav">Dashboard</span></a></li>
+            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> <span data-i18n="myComplaintsNav">My Complaints</span></a></li>
+            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> <span data-i18n="documentsNav">Documents</span></a></li>
+            <li><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> <span data-i18n="broadcastNav">Broadcast Channel</span></a></li>
+            <li><a href="road.html" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> <span data-i18n="roadNav">Road</span> </a></li>
+            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> <span data-i18n="chatbotNav">Guidance Chatbot</span> </a></li>
+            <li><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> <span data-i18n="settingsNav">Settings</span></a></li>
         </ul>
         <hr>
-        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
+        <button id="logoutBtn" class="btn btn-outline-light w-100" data-i18n="signOut">Sign Out</button>
     </div>
 
     <div class="flex-grow-1 d-flex flex-column" style="background-color:#2A4B79;color: white; min-height: 100vh; margin-left: 260px;">
@@ -49,38 +49,44 @@
                 <div class="ms-auto d-flex align-items-center">
                     <span class="badge bg-primary me-3" id="uWard">Ward --</span>
                     <strong id="uNameTop">User Name</strong>
+                    <!-- language selector -->
+                    <select id="languageSelect" class="form-select form-select-sm w-auto ms-3">
+                        <option value="en">English</option>
+                        <option value="np">नेपाली</option>
+                    </select>
                 </div>
                 
             </div>
         </nav>
 
         <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
-            <h2 class="mb-4">Welcome, <span id="uNameMain">Citizen</span></h2>
+            <h2 class="mb-4"><span data-i18n="welcome">Welcome</span>, <span id="uNameMain">Citizen</span></h2>
 
             <div class="row g-3">
                 <div class="col-md-3">
                     <div class="card p-4 shadow-sm text-center" style="height: 210px; top: 5px; bottom: 20px;">
                         <i class="bi bi-plus-circle text-primary fs-1 mb-2"></i>
-                        <h5>Submit Complaint</h5>
-                        <p class="small text-muted">Report local issues!</p>
+                        <h5 data-i18n="submitComplaint">Submit Complaint</h5>
+                        <p class="small text-muted" data-i18n="reportIssues">Report local issues!</p>
                             <button class="btn btn-primary"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#complaintModal">
+                                    data-bs-target="#complaintModal"
+                                    data-i18n="createNew">
                             Create New
                             </button>
                     </div>
                     <div class="card p-4 shadow-sm" style="height: 250px; top: 20px;">
-                        <h5 class="mb-3">Quick Actions</h5>
-                        <button id="quickWater" class="btn btn-primary w-100 mb-2">No Water</button>
-                        <button id="quickElectric" class="btn btn-warning w-100 mb-2">No Electricity</button>
-                        <button id="quickRoad" class="btn btn-danger w-100">Road Damage</button>
+                        <h5 class="mb-3" data-i18n="quickActions">Quick Actions</h5>
+                        <button id="quickWater" class="btn btn-primary w-100 mb-2" data-i18n="noWater">No Water</button>
+                        <button id="quickElectric" class="btn btn-warning w-100 mb-2" data-i18n="noElectricity">No Electricity</button>
+                        <button id="quickRoad" class="btn btn-danger w-100" data-i18n="roadDamage">Road Damage</button>
 
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="card p-4 shadow-sm h-100 text-center" style="height: 210px; top: 5px; bottom: 20px;">
                         <i class="bi bi-chat-dots fs-1 mb-2"></i>
-                        <h5>My Complaints</h5>
+                        <h5 data-i18n="myComplaintsCard">My Complaints</h5>
                         <div class="mb-3">
                             <div style="margin: 15px 0;">
                                 <div style="position: relative; padding: 20px 0;">
@@ -116,7 +122,7 @@
                             <p class="small"><strong>Location:</strong> <span id="latestLocation">-</span></p>
                             </div>
 
-                            <button id="viewComplaintBtn" class="btn btn-primary mt-2" style="font-size: 12px; padding: 6px 12px;">
+                            <button id="viewComplaintBtn" class="btn btn-primary mt-2" style="font-size: 12px; padding: 6px 12px;" data-i18n="viewComplaint">
                             View Complaint
                             </button>
 
@@ -124,21 +130,16 @@
                 </div>
                 <div class="col-md-5">
                     <div class="card p-4 shadow-sm" style="height: 250px; width:300px; top: 20px;">
-                        <h5 class="mb-3">Recent Updates</h5>
-                        <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                            <li class="list-group-item" style="border-left: 4px solid #0d6efd;"><span class="badge bg-primary me-2">Water</span>Water supply will be disrupted on 5th Aug.</li>
-                            <li class="list-group-item" style="border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Road</span>Road repair work starts from 10th Aug.</li>
-                            <li class="list-group-item" style="border-left: 4px solid #198754;"><span class="badge bg-success me-2">Waste</span>New waste collection schedule announced.</li>
-                            <li class="list-group-item" style="border-left: 4px solid #6f42c1;"><span class="badge bg-secondary me-2">General</span>Community meeting on 15th Aug at 5 PM.</li>
-                            <li class="list-group-item" style="border-left: 4px solid #ffc107;"><span class="badge bg-warning me-2" style="color: #000;">Electricity</span>Electricity maintenance on 20th Aug.</li>
+                        <h5 class="mb-3" data-i18n="recentUpdates">Recent Updates</h5>
+                        <ul class="list-group list-group-flush" id="updatesList" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Dynamically populated from broadcasts -->
                         </ul>
                     </div>
                     <div class="col-md-5">
                         <div class="card p-4 shadow-sm" style="height: 170px; width:300px; top: 40px;">
-                            <h5 class="mb-3" style="background-color: #dc3545; color: white; padding: 10px; border-radius: 5px;">Emergency Alerts</h5>
-                            <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                <li class="list-group-item emergency" style="border: 1px solid #dc3545; border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Emergency</span>Road blocked due to landslide in Tole-3.</li>
-                                <li class="list-group-item emergency" style="border: 1px solid #dc3545; border-left: 4px solid #dc3545;"><span class="badge bg-danger me-2">Emergency</span>Fire reported in local market, avoid the area.</li>
+                            <h5 class="mb-3" style="background-color: #dc3545; color: white; padding: 10px; border-radius: 5px;" data-i18n="emergencyAlerts">Emergency Alerts</h5>
+                            <ul class="list-group list-group-flush" id="emergencyList" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Dynamically populated from broadcasts -->
                             </ul>
 
                     </div>

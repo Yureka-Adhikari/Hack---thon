@@ -89,12 +89,14 @@ async function handleSubmitComplaint(e) {
   }
 
   try {
+    console.log("Submitting complaint with wardNumber:", userWard, "Type:", typeof userWard);
     await addDoc(collection(db, "complaints"), {
       title,
       category,
       description,
       location,
       userId: currentUser.uid,
+      userName: document.getElementById("uNameMain")?.innerText || "Citizen",
       status: "Submitted",
       createdAt: serverTimestamp(),
       wardNumber: userWard,

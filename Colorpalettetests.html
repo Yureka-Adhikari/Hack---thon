@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CivicSewa - National Smart Governance Infrastructure Platform">
+<title>CivicSewa | National Smart Governance</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+/* =====================================================
+   PURE GREEN + BLUE GOVTECH PALETTE
+===================================================== */
+
+:root{
+  --bg:#0b1620;                /* Deep navy-blue */
+  --bg-soft:#112433;           /* Blue-teal blend */
+  --green:#19b37a;             /* Civic green */
+  --blue:#1e88e5;              /* Trust blue */
+  --blue-light:#42a5f5;        /* Hover highlight */
+  --text:#f4f7fa;
+  --muted:#9bb3c2;
+  --glass:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.08);
+}
+
+/* ===================================================== */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(180deg,var(--bg),#071018);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+/* =====================================================
+   SUBTLE GRID
+===================================================== */
+
+body::before{
+  content:"";
+  position:fixed;
+  width:100%;
+  height:100%;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size:85px 85px;
+  z-index:-3;
+}
+
+/* =====================================================
+   BLUE ORB GLOW
+===================================================== */
+
+.orb{
+  position:fixed;
+  width:500px;
+  height:500px;
+  background:radial-gradient(circle,rgba(30,136,229,0.25),transparent 70%);
+  top:-150px;
+  right:-150px;
+  animation:float 18s ease-in-out infinite;
+  z-index:-2;
+}
+
+@keyframes float{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(40px);}
+}
+
+/* =====================================================
+   NAVBAR
+===================================================== */
+
+header{
+  position:fixed;
+  width:100%;
+  padding:22px 60px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  backdrop-filter:blur(14px);
+  background:rgba(11,22,32,0.75);
+  border-bottom:1px solid var(--border);
+  z-index:1000;
+}
+
+.logo{
+  font-weight:800;
+  font-size:22px;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+nav{
+  display:flex;
+  gap:40px;
+  align-items:center;
+}
+
+nav a{
+  text-decoration:none;
+  color:var(--muted);
+  font-weight:500;
+  transition:.3s;
+}
+
+nav a:hover{
+  color:white;
+}
+
+.nav-btn{
+  padding:10px 22px;
+  border-radius:40px;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  color:white;
+  font-weight:600;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:0 20px;
+}
+
+.hero-content{
+  max-width:900px;
+}
+
+.hero h1{
+  font-size:60px;
+  font-weight:800;
+  line-height:1.1;
+  margin-bottom:20px;
+}
+
+.hero span{
+  background:linear-gradient(90deg,var(--green),var(--blue-light));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.hero p{
+  color:var(--muted);
+  font-size:20px;
+  margin-bottom:40px;
+}
+
+.hero-buttons{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+}
+
+.btn{
+  padding:15px 34px;
+  border-radius:40px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+  text-decoration:none;
+}
+
+.btn-primary{
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  color:white;
+}
+
+.btn-secondary{
+  background:var(--glass);
+  border:1px solid var(--border);
+  color:white;
+}
+
+.btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 30px rgba(30,136,229,0.25);
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.section{
+  padding:140px 10%;
+}
+
+.section h2{
+  text-align:center;
+  font-size:42px;
+  margin-bottom:80px;
+}
+
+/* =====================================================
+   FEATURES
+===================================================== */
+
+.features{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:40px;
+}
+
+.card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  padding:40px;
+  border-radius:20px;
+  backdrop-filter:blur(12px);
+  transition:.4s;
+}
+
+.card:hover{
+  border-color:var(--blue);
+  box-shadow:0 0 40px rgba(30,136,229,.25);
+}
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.stats{
+  display:flex;
+  justify-content:center;
+  gap:100px;
+  text-align:center;
+}
+
+.stat h3{
+  font-size:52px;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.stat p{
+  color:var(--muted);
+}
+
+/* =====================================================
+   CTA
+===================================================== */
+
+.cta{
+  background:linear-gradient(135deg,var(--bg-soft),var(--bg));
+  padding:120px 10%;
+  text-align:center;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+footer{
+  padding:60px 10%;
+  text-align:center;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+}
+
+/* =====================================================
+   REVEAL ANIMATION
+===================================================== */
+
+.reveal{
+  opacity:0;
+  transform:translateY(40px);
+  transition:all .8s ease;
+}
+
+.reveal.active{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:768px){
+  .hero h1{font-size:36px;}
+  .stats{flex-direction:column;gap:50px;}
+  header{padding:20px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="orb"></div>
+
+<header>
+  <div class="logo">CivicSewa</div>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#impact">Impact</a>
+    <a href="login.html">Login</a>
+    <a href="signup.html" class="nav-btn">Get Started</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-content reveal">
+    <h1>Building <span>Transparent Governance</span><br>For Modern Cities</h1>
+    <p>Digital civic infrastructure empowering citizens nationwide.</p>
+    <div class="hero-buttons">
+      <a href="signup.html" class="btn btn-primary">Join CivicSewa</a>
+      <a href="#features" class="btn btn-secondary">Explore Platform</a>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="section">
+  <h2 class="reveal">Platform Capabilities</h2>
+  <div class="features">
+    <div class="card reveal"><h3>Real-Time Reporting</h3><p>Geo-tagged civic complaint system.</p></div>
+    <div class="card reveal"><h3>Transparency Dashboard</h3><p>Public performance metrics.</p></div>
+    <div class="card reveal"><h3>Secure Payments</h3><p>Municipal digital billing.</p></div>
+    <div class="card reveal"><h3>AI Verification</h3><p>Automated validation engine.</p></div>
+  </div>
+</section>
+
+<section id="impact" class="section">
+  <h2 class="reveal">National Impact</h2>
+  <div class="stats">
+    <div class="stat reveal">
+      <h3>12,850</h3>
+      <p>Citizens Connected</p>
+    </div>
+    <div class="stat reveal">
+      <h3>9,420</h3>
+      <p>Issues Resolved</p>
+    </div>
+    <div class="stat reveal">
+      <h3>52</h3>
+      <p>Cities Onboarded</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta reveal">
+  <h2>Join The Smart Governance Revolution</h2>
+  <a href="signup.html" class="btn btn-primary">Create Your Account</a>
+</section>
+
+<footer>
+  © 2026 CivicSewa | National Digital Civic Infrastructure
+</footer>
+
+<script>
+const reveals=document.querySelectorAll('.reveal');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add('active');
+    }
+  });
+},{threshold:0.2});
+reveals.forEach(r=>observer.observe(r));
+</script>
+
+</body>
+</html>
