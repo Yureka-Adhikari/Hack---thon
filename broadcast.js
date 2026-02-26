@@ -23,6 +23,15 @@ const db = getFirestore(app);
 
 const broadcastContainer = document.querySelector(".row.g-4");
 
+// Category color mapping
+const categoryMap = {
+  Water: { color: "0d6efd", name: "Water" },
+  Road: { color: "dc3545", name: "Road" },
+  Waste: { color: "198754", name: "Waste" },
+  General: { color: "6f42c1", name: "General" },
+  Electricity: { color: "ffc107", name: "Electricity" },
+};
+
 // Listen for updates
 const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
 
@@ -38,16 +47,22 @@ onSnapshot(q, (snapshot) => {
 
   snapshot.forEach((doc) => {
     const data = doc.data();
+    const category = data.category || "General";
+    const catStyle = categoryMap[category] || categoryMap["General"];
 
     // 2. Safely handle the Date
     const dateString = data.createdAt?.toDate
       ? data.createdAt.toDate().toLocaleString()
       : "Just now...";
+    
+    const borderColor = data.emergency ? "#dc3545" : `#${catStyle.color}`;
+    const badgeText = data.emergency ? "Emergency" : category;
 
     const cardHtml = `
             <div class="col-md-6 col-lg-4">
-                <div class="card broadcast-card shadow-sm h-100 ${data.emergency ? "emergency" : ""}">
+                <div class="card broadcast-card shadow-sm h-100 ${data.emergency ? "emergency" : ""}" style="border-left: 5px solid ${borderColor};">
                     <div class="card-body">
+                        <span class="badge" style="background-color: #${catStyle.color} !important; margin-bottom: 8px;">${badgeText}</span>
                         <h5 class="card-title ${data.emergency ? "text-danger fw-bold" : ""}">
                             ${data.emergency ? '<i class="bi bi-exclamation-triangle-fill"></i> ' : ""}${data.title}
                         </h5>

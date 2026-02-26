@@ -57,11 +57,17 @@ onAuthStateChanged(auth, async (user) => {
     const latest = snapshot.docs[0].data();
 
     document.getElementById("latestTitle").innerText = latest.title;
-    document.getElementById("latestStatus").innerText = latest.status;
+    const statusEl = document.getElementById("latestStatus");
+    statusEl.innerText = latest.status;
+    // store raw english value for progress bar
+    statusEl.dataset.raw = latest.status;
     document.getElementById("latestCategory").innerText = latest.category;
     document.getElementById("latestLocation").innerText = latest.location;
 
-    // reapply language on dynamic elements
+    // update progress line based on raw status
+    updateProgress(latest.status);
+
+    // reapply language on dynamic elements (this will translate status too)
     const currentLang = localStorage.getItem("lang") || "en";
     updateLanguage(currentLang);
   }
@@ -69,7 +75,10 @@ onAuthStateChanged(auth, async (user) => {
 
 // ================= LOAD BROADCASTS =================
 function loadBroadcasts() {
-  const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
+  const q = query(
+    collection(db, "broadcasts"),
+    orderBy("createdAt", "desc"),
+  );
   
   onSnapshot(q, (snapshot) => {
     const updatesList = document.getElementById("updatesList");
@@ -117,9 +126,11 @@ function loadBroadcasts() {
       
       item.innerHTML = `
         <span class="badge bg-${badgeClass} me-2">${badgeText}</span>
-        <span>${data.content}</span>
+        <span class="fw-bold">${data.title}</span><br>
         <small class="text-muted d-block mt-1">${dateString}</small>
       `;
+      item.onclick = () => alert(data.title + "\n\n" + data.content);
+      
       
       if (isEmergency && emergencyList) {
         emergencyList.appendChild(item);
@@ -260,6 +271,9 @@ const translations = {
     viewComplaint: "View Complaint",
     recentUpdates: "Recent Updates",
     emergencyAlerts: "Emergency Alerts",
+    statusSubmitted: "Submitted",
+    statusInProgress: "In Progress",
+    statusResolved: "Resolved",
     alertLogin: "Please login first.",
     alertSubmitSuccess: "Complaint submitted successfully!",
     alertSubmitError: "Error submitting complaint.",
@@ -269,15 +283,7 @@ const translations = {
     updCatWaste: "Waste",
     updCatGeneral: "General",
     updCatElectricity: "Electricity",
-    upd1: "Water supply will be disrupted on 5th Aug.",
-    upd2: "Road repair work starts from 10th Aug.",
-    upd3: "New waste collection schedule announced.",
-    upd4: "Community meeting on 15th Aug at 5 PM.",
-    upd5: "Electricity maintenance on 20th Aug.",
-    emergencyTag: "Emergency",
-    alert1: "Road blocked due to landslide in Tole-3.",
-    alert2: "Fire reported in local market, avoid the area.",
-    // add more keys as needed
+
   },
   np: {
     searchPlaceholder: "खोज्नुहोस्...",
@@ -301,6 +307,9 @@ const translations = {
     viewComplaint: "गुनासो हेर्नुहोस्",
     recentUpdates: "हालका सूचनाहरू",
     emergencyAlerts: "आपत्कालीन चेतावनीहरू",
+    statusSubmitted: "पेश गरियो",
+    statusInProgress: "प्रगति हुँदैछ",
+    statusResolved: "समाधान भएको",
     alertLogin: "कृपया पहिले लगइन गर्नुहोस्।",
     alertSubmitSuccess: "गुनासो सफलतापूर्वक पेश गरियो!",
     alertSubmitError: "गुनासो पेश गर्दा त्रुटि भयो।",
@@ -310,14 +319,10 @@ const translations = {
     updCatWaste: "फोहोर",
     updCatGeneral: "सामान्य",
     updCatElectricity: "बिजुली",
-    upd1: "५ अगस्तमा पानी आपूर्ति अवरुद्ध हुनेछ।",
-    upd2: "१० अगस्तदेखि सडक मर्मतकार्य सुरु हुन्छ।",
-    upd3: "नयाँ फोहोर संकलन तालिका घोषणा गरियो।",
-    upd4: "१५ अगस्तमा साँझ ५ बजे सामुदायिक बैठक हुनेछ।",
-    upd5: "२० अगस्तमा बिजुली मर्मतसम्भार हुनेछ।",
-    emergencyTag: "आपतकाल",
-    alert1: "टोले-३ मा पहिरोका कारण सडक अवरुद्ध।",
-    alert2: "स्थानिय बजारमा आगलागी, त्यस क्षेत्रमा नगईदिनुहोला।",
+    updCatEmergency: "आपत्कालीन",
+    updCatOther: "अन्य",
+    //updating status translations
+
     // more translations
   },
 };
@@ -346,8 +351,49 @@ function updateLanguage(lang) {
     if (map[lang] && map[lang][current]) {
       stEl.innerText = map[lang][current];
     }
+    // refresh progress bar using raw value (unstyled)
+    if (stEl.dataset.raw) {
+      updateProgress(stEl.dataset.raw);
+    }
   }
 }
+
+// ================= PROGRESS BAR =================
+function updateProgress(status) {
+  if (!status) return;
+  // normalize status string (lowercase, no spaces)
+  const norm = status.toString().trim().toLowerCase().replace(/\s+/g, "");
+
+  const seg1 = document.getElementById("progressSegment1");
+  const seg2 = document.getElementById("progressSegment2");
+  const nodeSub = document.getElementById("nodeSubmitted");
+  const nodeIn = document.getElementById("nodeInProgress");
+  const nodeRes = document.getElementById("nodeResolved");
+
+  if (!seg1 || !seg2 || !nodeSub || !nodeIn || !nodeRes) return;
+
+  // initialize all segments to zero
+  seg1.style.width = "0%";
+  seg2.style.width = "0%";
+
+  // set node colours based on normalized status
+  nodeSub.querySelector(".node-circle").style.background = "#0d47a1";
+  nodeIn.querySelector(".node-circle").style.background =
+    norm === "inprogress" || norm === "resolved" ? "#ffc107" : "#e0e0e0";
+  nodeRes.querySelector(".node-circle").style.background =
+    norm === "resolved" ? "#28a745" : "#e0e0e0";
+
+  // progress bar widths
+  if (norm === "submitted") {
+    // nothing filled yet
+  } else if (norm === "inprogress") {
+    seg1.style.width = "50%";
+  } else if (norm === "resolved") {
+    seg1.style.width = "50%";
+    seg2.style.width = "50%";
+  }
+}
+
 
 const langSelect = document.getElementById("languageSelect");
 if (langSelect) {

@@ -93,23 +93,23 @@
                                     <!-- Progress line background -->
                                     <div style="position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: #e0e0e0;"></div>
                                     <!-- Blue segment (Submitted to In Progress) -->
-                                    <div style="position: absolute; top: 15px; left: 0; width: 50%; height: 4px; background: #0d47a1;"></div>
+                                    <div id="progressSegment1" style="position: absolute; top: 15px; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #0d6efd 0%, #ffc107 100%);"></div>
                                     <!-- Yellow segment (In Progress to Resolved) -->
-                                    <div style="position: absolute; top: 15px; left: 50%; right: 0; height: 4px; background: #ffc107;"></div>
+                                    <div id="progressSegment2" style="position: absolute; top: 15px; left: 50%; width: 0%; height: 4px; background: linear-gradient(to right, #ffc107 0%, #28a745 100%);"></div>
                                     
                                     <!-- Nodes -->
                                     <div style="display: flex; justify-content: space-between; position: relative; z-index: 1;">
-                                        <div class="text-center" style="flex: 1;">
-                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #0d47a1; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">Submitted</small>
+                                        <div id="nodeSubmitted" class="text-center" style="flex: 1;">
+                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #0d47a1; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusSubmitted">Submitted</small>
                                         </div>
-                                        <div class="text-center" style="flex: 1;">
-                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #ffc107; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">In Progress</small>
+                                        <div id="nodeInProgress" class="text-center" style="flex: 1;">
+                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #ffc107; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusInProgress">In Progress</small>
                                         </div>
-                                        <div class="text-center" style="flex: 1;">
-                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #28a745; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;">Resolved</small>
+                                        <div id="nodeResolved" class="text-center" style="flex: 1;">
+                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #28a745; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
+                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusResolved">Resolved</small>
                                         </div>
                                     </div>
                                 </div>
