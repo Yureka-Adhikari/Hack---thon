@@ -103,11 +103,11 @@ function loadBroadcasts() {
         : "Just now";
       
       const categoryMap = {
-        Water: { color: "0d6efd", bgColor: "primary" },
-        Road: { color: "dc3545", bgColor: "danger" },
-        Waste: { color: "198754", bgColor: "success" },
-        General: { color: "6f42c1", bgColor: "secondary" },
-        Electricity: { color: "ffc107", bgColor: "warning" },
+        Water: { color: "0d6efd", bgColor: "primary", key: "updCatWater" },
+        Road: { color: "dc3545", bgColor: "danger", key: "updCatRoad" },
+        Waste: { color: "198754", bgColor: "success", key: "updCatWaste" },
+        General: { color: "6f42c1", bgColor: "secondary", key: "updCatGeneral" },
+        Electricity: { color: "ffc107", bgColor: "warning", key: "updCatElectricity" },
       };
       
       const catStyle = categoryMap[category] || categoryMap["General"];
@@ -122,7 +122,7 @@ function loadBroadcasts() {
       }
       
       const badgeClass = isEmergency ? "danger" : catStyle.bgColor;
-      const badgeText = isEmergency ? "Emergency" : category;
+      const badgeText = isEmergency ? t("emergencyTag") : t(catStyle.key);
       
       item.innerHTML = `
         <span class="badge bg-${badgeClass} me-2">${badgeText}</span>
@@ -405,6 +405,8 @@ if (langSelect) {
     const chosen = langSelect.value;
     localStorage.setItem("lang", chosen);
     updateLanguage(chosen);
+    // reload broadcasts with new language
+    loadBroadcasts();
   });
 }
 
