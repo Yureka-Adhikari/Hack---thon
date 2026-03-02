@@ -6,6 +6,7 @@ import {
   orderBy,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // !!! PASTE YOUR ACTUAL CONFIG HERE FROM FIREBASE CONSOLE !!!
 const firebaseConfig = {

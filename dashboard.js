@@ -283,7 +283,15 @@ const translations = {
     updCatWaste: "Waste",
     updCatGeneral: "General",
     updCatElectricity: "Electricity",
-
+    statusSubmitted: "Submitted",
+    statusInProgress: "In Progress",
+    statusResolved: "Resolved",
+    catWater: "Water",
+    catElectricity: "Electricity",
+    catRoad: "Road",
+    catWaste: "Waste",
+    catOther: "Other",
+    emergencyTag: "EMERGENCY",
   },
   np: {
     searchPlaceholder: "खोज्नुहोस्...",
@@ -321,6 +329,15 @@ const translations = {
     updCatElectricity: "बिजुली",
     updCatEmergency: "आपत्कालीन",
     updCatOther: "अन्य",
+    statusSubmitted: "पेश गरियो",
+    statusInProgress: "प्रगति हुँदैछ",
+    statusResolved: "समाधान भएको",
+    catWater: "पानी",
+    catElectricity: "बिजुली",
+    catRoad: "सडक",
+    catWaste: "फोहोर",
+    catOther: "अन्य",
+    emergencyTag: "आपत्कालीन",
     //updating status translations
 
     // more translations

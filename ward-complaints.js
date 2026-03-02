@@ -73,7 +73,7 @@ function loadComplaints() {
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <h5 class="fw-bold text-primary">${data.title}</h5>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteComplaint('${complaintId}')"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger")"><i class="bi bi-trash"></i></button>
                             </div>
                             <p class="text-muted small mb-2">From: ${data.userName || "Citizen"} | Ward: ${data.wardNumber}</p>
                             <p class="mb-1"><strong>Location:</strong> ${data.location}</p>
@@ -110,10 +110,6 @@ window.updateStatus = async (id, newStatus) => {
   }
 };
 
-window.deleteComplaint = async (id) => {
-  if (confirm("Remove this record?"))
-    await deleteDoc(doc(db, "complaints", id));
-};
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   signOut(auth).then(() => (window.location.href = "login.html"));
