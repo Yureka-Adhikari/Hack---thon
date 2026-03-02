@@ -1,6 +1,8 @@
 import { setupFileUpload } from "./fileHandler.js";
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
+
+
 const chatBody = document.getElementById("chatBody");
 const input = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -13,10 +15,10 @@ let attachedFile = null;
 let messages = [];
 
 // REPLACING LEAKED KEY & INCORRECT MODEL STRING
-const API_KEY = "PASTE_YOUR_NEW_KEY_HERE";
+const API_KEY = "AIzaSyC2R-7E1XV9tJr-5FsVwnaJ4Q7PPlgZ9O8";
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash", // Corrected from 2.5
+  model: "gemini-2.5-flash", // Corrected from 2.5
 });
 
 /* Send Logic */
@@ -35,7 +37,6 @@ function addMessage(text, type) {
   msg.classList.add("message", type);
 
   const content = document.createElement("div");
-  // Use innerHTML for AI to render formatting, textContent for User for safety
   if (type === "ai") {
     content.innerHTML = text;
   } else {
@@ -45,7 +46,7 @@ function addMessage(text, type) {
   const time = document.createElement("div");
   time.classList.add("timestamp");
   time.textContent = new Date().toLocaleTimeString([], {
-    hour: "2-刻",
+    hour: "2-digit",
     minute: "2-digit",
   });
 
@@ -53,21 +54,20 @@ function addMessage(text, type) {
   msg.appendChild(time);
   chatBody.appendChild(msg);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to latest message
   chatBody.scrollTop = chatBody.scrollHeight;
 
   messages.push({ type, text, time: time.textContent });
 }
 
-/* Clean Formatting Logic */
+/* AI Formatting Logic */
 function formatAIResponse(text) {
   return text
-    .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>") // Bold
-    .split(/\n\n+/) // Split by double newlines
+    .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
+    .split(/\n\n+/)
     .map((para) => para.trim())
     .filter((para) => para.length > 0)
     .map((para) => {
-      // Simple Check for lists
       if (para.includes("•") || para.match(/^\d+\./)) {
         return `<div style="margin-bottom:1rem">${para.replace(/\n/g, "<br>")}</div>`;
       }
@@ -107,14 +107,45 @@ input.addEventListener("keydown", (e) => {
   }
 });
 
-attachBtn.addEventListener("click", () => fileInput.click());
-
+/* Export Chat as PDF */
 exportBtn.addEventListener("click", () => {
-  const dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(messages, null, 2));
-  const dlAnchor = document.createElement("a");
-  dlAnchor.setAttribute("href", dataStr);
-  dlAnchor.setAttribute("download", "chat_history.json");
-  dlAnchor.click();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("CivicSewa Chat History", 14, 22);
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text(`Exported on: ${new Date().toLocaleString()}`, 14, 30);
+
+  const tableRows = messages.map(msg => [
+    msg.time,
+    msg.type.toUpperCase(),
+    msg.text.replace(/<[^>]*>?/gm, '') // Remove HTML tags for PDF
+  ]);
+
+  doc.autoTable({
+    startY: 35,
+    head: [['Time', 'Sender', 'Message']],
+    body: tableRows,
+    theme: 'striped',
+    headStyles: { fillColor: [42, 75, 121] }, // Fixed: RGB for #2A4B79
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 'auto' }
+    },
+    styles: { overflow: 'linebreak', cellPadding: 5 }
+  });
+
+  doc.save("CivicSewa_Chat_Export.pdf");
+});
+
+attachBtn.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files;
+  if (file) {
+    attachedFile = file;
+    addMessage(`📎 Attached file: ${file.name}`, "user");
+  }
 });
