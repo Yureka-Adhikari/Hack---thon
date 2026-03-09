@@ -1,78 +1,170 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { auth, db } from "./firebase-config.js";
 import {
-  getFirestore,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+  doc,
+  getDoc,
   collection,
   query,
   orderBy,
   onSnapshot,
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { translateBroadcast } from "./translator.js";
 
-// !!! PASTE YOUR ACTUAL CONFIG HERE FROM FIREBASE CONSOLE !!!
-const firebaseConfig = {
-  apiKey: "AIzaSyCWU1yZufweSez51pQptnr6ZX_FJZ3LKxc",
-  authDomain: "hack---a---thon-2026.firebaseapp.com",
-  projectId: "hack---a---thon-2026",
-  storageBucket: "hack---a---thon-2026.firebasestorage.app",
-  messagingSenderId: "566869340021",
-  appId: "1:566869340021:web:875343f6c99d165b602d3c",
-  measurementId: "G-CVEDYTDJT6",
+let cachedBroadcasts = [];
+let userWard = "N/A";
+let userMunicipality = "N/A";
+
+const translations = {
+  en: {
+    wardLabel: "Ward",
+    noBroadcasts: "No broadcasts available.",
+    catWater: "Water",
+    catRoad: "Road",
+    catWaste: "Waste",
+    catGeneral: "General",
+    catElectricity: "Electricity",
+    emergencyTag: "EMERGENCY",
+    justNow: "Just now",
+    translating: "Translating...",
+  },
+  np: {
+    wardLabel: "वार्ड",
+    noBroadcasts: "कुनै प्रसारण उपलब्ध छैन।",
+    catWater: "पानी",
+    catRoad: "सडक",
+    catWaste: "फोहोर",
+    catGeneral: "सामान्य",
+    catElectricity: "बिजुली",
+    emergencyTag: "आपत्कालीन",
+    justNow: "भर्खरै",
+    translating: "अनुवाद हुँदैछ...",
+  },
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+function t(key) {
+  const lang = localStorage.getItem("lang") || "en";
+  return translations[lang]?.[key] || translations.en[key] || key;
+}
 
-const broadcastContainer = document.querySelector(".row.g-4");
-
-// Category color mapping
 const categoryMap = {
-  Water: { color: "0d6efd", name: "Water" },
-  Road: { color: "dc3545", name: "Road" },
-  Waste: { color: "198754", name: "Waste" },
-  General: { color: "6f42c1", name: "General" },
-  Electricity: { color: "ffc107", name: "Electricity" },
+  Water: { color: "0d6efd", key: "catWater" },
+  Road: { color: "dc3545", key: "catRoad" },
+  Waste: { color: "198754", key: "catWaste" },
+  General: { color: "6f42c1", key: "catGeneral" },
+  Electricity: { color: "ffc107", key: "catElectricity" },
 };
 
-// Listen for updates
-const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
+function updateStaticLabels() {
+  const wardEl = document.getElementById("uWard");
+  if (wardEl && userWard !== "N/A") {
+    wardEl.innerText = `${t("wardLabel")} ${userWard}, ${userMunicipality}`;
+  }
+}
 
-onSnapshot(q, (snapshot) => {
-  // 1. Clear container once
-  broadcastContainer.innerHTML = "";
+// ===== AUTH =====
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    const nameEl = document.getElementById("uNameTop");
+    if (nameEl) nameEl.innerText = data.fullName || "";
+    userWard = data.wardNumber || "N/A";
+    userMunicipality = data.municipality || "N/A";
+    updateStaticLabels();
+  }
+});
 
-  if (snapshot.empty) {
-    broadcastContainer.innerHTML =
-      '<div class="col-12 text-center mt-5 text-muted">No broadcasts available.</div>';
+// ===== RENDER =====
+async function renderBroadcasts() {
+  const container = document.querySelector(".row.g-4");
+  if (!container) return;
+  const lang = localStorage.getItem("lang") || "en";
+
+  if (cachedBroadcasts.length === 0) {
+    container.innerHTML = `<div class="col-12 text-center mt-5 text-muted">${t("noBroadcasts")}</div>`;
     return;
   }
 
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    const category = data.category || "General";
-    const catStyle = categoryMap[category] || categoryMap["General"];
+  if (lang === "np") {
+    container.innerHTML = `
+      <div class="col-12 text-center py-4 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>${t("translating")}
+      </div>`;
+  }
 
-    // 2. Safely handle the Date
+  const translatedList = await Promise.all(
+    cachedBroadcasts.map(async (data) => {
+      if (lang !== "np") return data;
+      const { title, content } = await translateBroadcast(data, lang);
+      return { ...data, title, content };
+    }),
+  );
+
+  container.innerHTML = "";
+  translatedList.forEach((data) => {
+    const catStyle = categoryMap[data.category] || categoryMap["General"];
     const dateString = data.createdAt?.toDate
       ? data.createdAt.toDate().toLocaleString()
-      : "Just now...";
-    
+      : t("justNow");
     const borderColor = data.emergency ? "#dc3545" : `#${catStyle.color}`;
-    const badgeText = data.emergency ? "Emergency" : category;
+    const badgeText = data.emergency ? t("emergencyTag") : t(catStyle.key);
+    const badgeBg = data.emergency ? "#dc3545" : `#${catStyle.color}`;
 
-    const cardHtml = `
-            <div class="col-md-6 col-lg-4">
-                <div class="card broadcast-card shadow-sm h-100 ${data.emergency ? "emergency" : ""}" style="border-left: 5px solid ${borderColor};">
-                    <div class="card-body">
-                        <span class="badge" style="background-color: #${catStyle.color} !important; margin-bottom: 8px;">${badgeText}</span>
-                        <h5 class="card-title ${data.emergency ? "text-danger fw-bold" : ""}">
-                            ${data.emergency ? '<i class="bi bi-exclamation-triangle-fill"></i> ' : ""}${data.title}
-                        </h5>
-                        <p class="text-muted small mb-2">${dateString}</p>
-                        <p class="card-text">${data.content}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    broadcastContainer.innerHTML += cardHtml;
+    container.innerHTML += `
+      <div class="col-md-6 col-lg-4">
+        <div class="card broadcast-card shadow-sm h-100 ${data.emergency ? "emergency" : ""}"
+             style="border-left:5px solid ${borderColor}; border-radius:12px;">
+          <div class="card-body">
+            <span class="badge mb-2" style="background-color:${badgeBg}; color:white;">${badgeText}</span>
+            <h5 class="card-title ${data.emergency ? "text-danger fw-bold" : ""}">
+              ${data.emergency ? '<i class="bi bi-exclamation-triangle-fill me-1"></i>' : ""}${data.title}
+            </h5>
+            <p class="text-muted small mb-2">${dateString}</p>
+            <p class="card-text">${data.content}</p>
+          </div>
+        </div>
+      </div>`;
   });
+}
+
+// ===== FIRESTORE LISTENER =====
+const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
+onSnapshot(q, async (snapshot) => {
+  cachedBroadcasts = [];
+  snapshot.forEach((docSnap) => {
+    const raw = docSnap.data();
+    cachedBroadcasts.push({
+      title: raw.title || "",
+      content: raw.content || "",
+      category: raw.category || "General",
+      emergency: raw.emergency || false,
+      createdAt: raw.createdAt,
+    });
+  });
+  await renderBroadcasts();
+});
+
+// ===== LANGUAGE SELECTOR =====
+const langSelect = document.getElementById("languageSelect");
+if (langSelect) {
+  const stored = localStorage.getItem("lang") || "en";
+  langSelect.value = stored;
+  updateStaticLabels();
+  langSelect.addEventListener("change", async () => {
+    localStorage.setItem("lang", langSelect.value);
+    updateStaticLabels();
+    await renderBroadcasts();
+  });
+}
+
+// ===== LOGOUT =====
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  signOut(auth).then(() => (window.location.href = "login.html"));
 });

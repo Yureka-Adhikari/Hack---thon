@@ -126,6 +126,10 @@ h2 {
                 <div class="ms-auto d-flex align-items-center">
                     <span class="badge bg-primary me-3" id="uWard">Ward --</span>
                     <strong id="uNameTop">User Name</strong>
+                    <select id="languageSelect" class="form-select form-select-sm w-auto ms-3">
+                        <option value="en">English</option>
+                        <option value="np">नेपाली</option>
+                    </select>
                 </div>
             </div>
         </nav>
@@ -135,44 +139,44 @@ h2 {
             
             <!-- Complaint Form Section -->
             <div class="card p-4 shadow-sm mb-4 border-0">
-                <h4 class="mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Submit a New Complaint</h4>
+                <h4 class="mb-3"><i class="bi bi-plus-circle text-primary me-2"></i><span data-i18n="formHeading">Submit a New Complaint</span></h4>
                 <form id="complaintForm">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="complaintTitle" class="form-label fw-bold">Title *</label>
-                            <input type="text" class="form-control" id="complaintTitle" placeholder="Brief title of the complaint" required>
+                            <label for="complaintTitle" class="form-label fw-bold" data-i18n="formTitleLabel">Title *</label>
+                            <input type="text" class="form-control" id="complaintTitle" data-i18n-placeholder="formTitlePlaceholder" placeholder="Brief title of the complaint" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="complaintCategory" class="form-label fw-bold">Category *</label>
+                            <label for="complaintCategory" class="form-label fw-bold" data-i18n="formCategoryLabel">Category *</label>
                             <select class="form-control" id="complaintCategory" required>
-                                <option value="">Select Category</option>
-                                <option value="Road Damage">Road Damage</option>
-                                <option value="Water Supply">Water Supply</option>
-                                <option value="Electricity">Electricity</option>
-                                <option value="Sanitation">Sanitation</option>
-                                <option value="Other">Other</option>
+                                <option value="" data-i18n="formCategorySelect">Select Category</option>
+                                <option value="Road Damage" data-i18n="catRoadDamage">Road Damage</option>
+                                <option value="Water Supply" data-i18n="catWaterSupply">Water Supply</option>
+                                <option value="Electricity" data-i18n="catElectricity">Electricity</option>
+                                <option value="Sanitation" data-i18n="catSanitation">Sanitation</option>
+                                <option value="Other" data-i18n="catOther">Other</option>
                             </select>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="complaintLocation" class="form-label fw-bold">Location *</label>
-                        <input type="text" class="form-control" id="complaintLocation" placeholder="Where is the issue located?" required>
+                        <label for="complaintLocation" class="form-label fw-bold" data-i18n="formLocationLabel">Location *</label>
+                        <input type="text" class="form-control" id="complaintLocation" data-i18n-placeholder="formLocationPlaceholder" placeholder="Where is the issue located?" required>
                     </div>
                     <div class="mb-3">
-                        <label for="complaintDescription" class="form-label fw-bold">Description *</label>
-                        <textarea class="form-control" id="complaintDescription" rows="4" placeholder="Describe the issue in detail..." required></textarea>
+                        <label for="complaintDescription" class="form-label fw-bold" data-i18n="formDescLabel">Description *</label>
+                        <textarea class="form-control" id="complaintDescription" rows="4" data-i18n-placeholder="formDescPlaceholder" placeholder="Describe the issue in detail..." required></textarea>
                     </div>
                     <div>
                         <button type="button" class="btn btn-primary btn-lg" id="submitComplaintBtn">
-                            <i class="bi bi-check-circle me-2"></i>Submit Complaint
+                            <i class="bi bi-check-circle me-2"></i><span data-i18n="formSubmitBtn">Submit Complaint</span>
                         </button>
-                        <button type="reset" class="btn btn-outline-secondary btn-lg ms-2">Clear Form</button>
+                        <button type="reset" class="btn btn-outline-secondary btn-lg ms-2" data-i18n="formClearBtn">Clear Form</button>
                     </div>
                 </form>
             </div>
 
             <!-- Complaints List Section -->
-            <h3 class="mt-5 mb-3">Your Submitted Complaints</h3>
+            <h3 class="mt-5 mb-3" data-i18n="submittedHeading">Your Submitted Complaints</h3>
             <div id="complaintsList" class="mt-4">
                 
             </div>
