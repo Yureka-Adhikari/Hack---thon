@@ -58,7 +58,7 @@ export async function translateComplaint(complaint, targetLang = "np") {
     return { title: complaint.title, description: complaint.description };
   }
   const [title, description] = await translateBatch(
-    [complaint.title, complaint.description],
+    [complaint.title, complaint.description, complaint.status, complaint.category, complaint.location, complaint.userName, complaint.wardNumber,  complaint.createdAt],
     targetLang,
   );
   return { title, description };
