@@ -17,9 +17,10 @@ const LINGVA_BASE = "https://lingva.ml/api/v1";
  * @param {string} text       - Source text (English)
  * @param {string} targetLang - "np" for Nepali, "en" to pass through unchanged
  * @returns {Promise<string>} - Translated string (falls back to original on error)
+ *
  */
+
 export async function translateText(text, targetLang = "np") {
-  if (!text || !text.trim()) return text;
   if (targetLang === "en") return text;
 
   const cacheKey = `${text}||en-ne`;
