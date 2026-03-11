@@ -1,4 +1,8 @@
-import { db } from "./firebase-config.js";
+import { db, auth } from "./firebase-config.js";
+import {
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   collection,
   addDoc,
@@ -8,139 +12,167 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { translateBroadcast } from "./translator.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("broadcastContainer");
-  const postBtn = document.getElementById("postBtn");
+let cachedBroadcasts = [];
+let currentUserWard = "N/A";
 
-  if (!container || !postBtn) {
-    console.error("Required elements not found in HTML.");
+// 1. AUTH & USER INFO
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
     return;
   }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    currentUserWard = data.wardNumber || "N/A";
+    if (document.getElementById("uWard"))
+      document.getElementById("uWard").innerText = `Ward ${currentUserWard}`;
+    if (document.getElementById("uNameTop"))
+      document.getElementById("uNameTop").innerText = data.fullName || "User";
+  }
+  initListener();
+});
 
-  // ================= REAL-TIME LISTENER =================
-  // This replaces loadBroadcasts(). It stays active and watches for changes.
+// 2. REAL-TIME LISTENER
+function initListener() {
   const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
-
   onSnapshot(q, (snapshot) => {
-    container.innerHTML = ""; // Clear for re-render
+    cachedBroadcasts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderBroadcasts();
+  });
+}
 
-    if (snapshot.empty) {
-      container.innerHTML =
-        '<div class="col-12 text-center mt-5"><h5>No active broadcasts.</h5></div>';
-      return;
+// 3. RENDER LOGIC (Fixed Category & Translation)
+async function renderBroadcasts() {
+  const container = document.getElementById("broadcastContainer");
+  if (!container) return;
+
+  const lang = localStorage.getItem("lang") || "en";
+
+  // Show loading state for Nepali (API delay)
+  if (lang === "np") {
+    container.innerHTML =
+      '<div class="col-12 text-center mt-5"><div class="spinner-border text-light"></div><p class="text-white mt-2">Translating...</p></div>';
+  }
+
+  const categoryMap = {
+    Water: "0d6efd",
+    Road: "dc3545",
+    Waste: "198754",
+    General: "6f42c1",
+    Electricity: "ffc107",
+  };
+
+  let tempHtml = "";
+
+  for (const rawData of cachedBroadcasts) {
+    let displayData = { ...rawData };
+
+    // FIX: Always use the original category for the color/logic
+    const waterCat = rawData.category === "Water" ? "Water" : null;
+    const roadCat = rawData.category === "Road" ? "Road" : null;
+    const wasteCat = rawData.category === "Waste" ? "Waste" : null;
+    const electricityCat =
+      rawData.category === "Electricity" ? "Electricity" : null;
+    const generalCat = rawData.category === "General" ? "General" : null;
+    const color = rawData.emergency
+      ? "e0333d"
+      : categoryMap[generalCat] ||
+        "6f42c1" ||
+        categoryMap[waterCat] ||
+        "0d6efd" ||
+        categoryMap[roadCat] ||
+        "dc3545" ||
+        categoryMap[wasteCat] ||
+        "198754" ||
+        categoryMap[electricityCat] ||
+        "ffc107";
+
+    if (lang === "np") {
+      try {
+        displayData = await translateBroadcast(rawData, "np");
+      } catch (e) {
+        console.error("Translation Error", e);
+      }
     }
 
-    // Category color mapping
-    const categoryMap = {
-      Water: { color: "0d6efd", name: "Water" },
-      Road: { color: "dc3545", name: "Road" },
-      Waste: { color: "198754", name: "Waste" },
-      General: { color: "6f42c1", name: "General" },
-      Electricity: { color: "ffc107", name: "Electricity" },
+    const dateString = rawData.createdAt?.toDate
+      ? rawData.createdAt.toDate().toLocaleString()
+      : "Syncing...";
+
+    tempHtml += `
+      <div class="col-md-4 mb-4">
+          <div class="broadcast-card shadow-sm ${rawData.emergency ? "emergency" : ""}" 
+               style="border-left: 6px solid #${color}; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); position: relative; min-height: 180px;">
+              
+              <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${rawData.id}">
+                  <i class="bi bi-trash"></i>
+              </button>
+
+              <h5 class="fw-bold mt-2">${displayData.title}</h5>
+              <p class="text-muted small mb-2">${dateString}</p>
+              <p class="card-text">${displayData.content}</p>
+          </div>
+      </div>`;
+  }
+
+  container.innerHTML =
+    tempHtml ||
+    '<div class="col-12 text-center mt-5 text-white"><h5>No active broadcasts.</h5></div>';
+
+  // Attach Delete Events
+  container.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.onclick = async () => {
+      if (confirm("Delete this broadcast?"))
+        await deleteDoc(doc(db, "broadcasts", btn.dataset.id));
     };
+  });
+}
 
-    snapshot.forEach((docSnap) => {
-      const post = docSnap.data();
-      const docId = docSnap.id;
-      const category = post.category || "General";
-      const catStyle = categoryMap[category] || categoryMap["General"];
+// 4. CREATE BROADCAST
+document.getElementById("postBtn")?.addEventListener("click", async () => {
+  const title = document.getElementById("title").value.trim();
+  const content = document.getElementById("content").value.trim();
+  const category = document.getElementById("category").value || "General";
+  const emergency = document.getElementById("emergency").checked;
 
-      // Handle the timestamp safely while it's still being generated by the server
-      const dateString = post.createdAt?.toDate
-        ? post.createdAt.toDate().toLocaleString()
-        : "Syncing...";
+  if (!title || !content) return alert("Please fill all fields");
 
-      const cardWrapper = document.createElement("div");
-      cardWrapper.className = "col-md-4 mb-4";
-      
-      const borderColor = post.emergency ? "#dc3545" : `#${catStyle.color}`;
-      const badgeColor = post.emergency ? "danger" : category;
-      const badgeText = post.emergency ? "Emergency" : category;
+  const btn = document.getElementById("postBtn");
+  btn.disabled = true;
+  btn.innerText = "Posting...";
 
-      cardWrapper.innerHTML = `
-        <div class="broadcast-card shadow-sm p-3 ${post.emergency ? "emergency border-danger" : ""}" 
-             style="background: white; border-radius: 15px; position: relative; border-left: 5px solid ${borderColor}">
-        
-          <button class="btn btn-sm btn-outline-danger delete-btn" 
-                  style="position: absolute; top: 10px; right: 10px;">
-            <i class="bi bi-trash"></i>
-          </button>
-
-          <span class="badge bg-${post.emergency ? 'danger' : 'primary'} mb-2" style="background-color: #${catStyle.color} !important;">${badgeText}</span>
-
-          <h5 class="fw-bold">${post.title}</h5>
-          <p class="text-muted small mb-2">${dateString}</p>
-          <p class="card-text">${post.content}</p>
-        </div>
-      `;
-
-      // Event Listener for Delete Button
-      cardWrapper
-        .querySelector(".delete-btn")
-        .addEventListener("click", async () => {
-          if (confirm("Delete this broadcast for everyone?")) {
-            try {
-              await deleteDoc(doc(db, "broadcasts", docId));
-              // No need to call loadBroadcasts(), onSnapshot handles it!
-            } catch (error) {
-              console.error("Error deleting:", error);
-            }
-          }
-        });
-
-      container.appendChild(cardWrapper);
+  try {
+    await addDoc(collection(db, "broadcasts"), {
+      title,
+      content,
+      category,
+      emergency,
+      wardNumber: currentUserWard,
+      createdAt: serverTimestamp(),
     });
-  });
+    bootstrap.Modal.getInstance(document.getElementById("createModal")).hide();
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+  } catch (error) {
+    alert("Error posting");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Post";
+  }
+});
 
-  // ================= CREATE BROADCAST =================
-  postBtn.addEventListener("click", async () => {
-    const titleField = document.getElementById("title");
-    const contentField = document.getElementById("content");
-    const categoryField = document.getElementById("category");
-    const emergencyField = document.getElementById("emergency");
+// 5. LANGUAGE SWITCHER
+document.getElementById("languageSelect")?.addEventListener("change", (e) => {
+  localStorage.setItem("lang", e.target.value);
+  renderBroadcasts();
+});
 
-    const title = titleField.value.trim();
-    const content = contentField.value.trim();
-    const category = categoryField.value || "General";
-    const emergency = emergencyField.checked;
-
-    if (!title || !content) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    // UI Feedback
-    postBtn.disabled = true;
-    postBtn.innerHTML =
-      '<span class="spinner-border spinner-border-sm"></span> Posting...';;
-
-    try {
-      await addDoc(collection(db, "broadcasts"), {
-        title,
-        content,
-        category,
-        emergency,
-        createdAt: serverTimestamp(),
-      });
-
-      // Clear form
-      titleField.value = "";
-      contentField.value = "";
-      categoryField.value = "";
-      emergencyField.checked = false;
-
-      // Close Bootstrap Modal
-      const modalEl = document.getElementById("createModal");
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
-    } catch (error) {
-      console.error("Error creating broadcast:", error);
-      alert("Failed to post. Check Firestore Rules.");
-    } finally {
-      postBtn.disabled = false;
-      postBtn.innerText = "Post";
-    }
-  });
+// 6. LOGOUT
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  signOut(auth).then(() => (window.location.href = "login.html"));
 });
