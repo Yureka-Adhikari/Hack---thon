@@ -1,491 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="CivicSewa - National Smart Governance Infrastructure Platform">
-<title>CivicSewa | National Smart Governance</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CivicSewa - National Smart Governance Infrastructure Platform for Nepal">
+    <title>CivicSewa | Next-Gen Local Governance</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-<style>
+    <style>
+        /* =====================================================
+           CIVICSEWA OFFICIAL PALETTE (Deep Space & Gold)
+           Matches base.css exactly for 1:1 consistency.
+        ===================================================== */
+        :root {
+            --bg-base: #0f0b1f;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.65);
+            --gold: #FFD700;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+        }
 
-/* =====================================================
-   ROOT SYSTEM
-===================================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(circle at top right, rgba(35, 20, 65, 0.9), rgba(15, 11, 31, 1)),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='topo' width='200' height='200' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 100s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50M0 150s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50M0 50s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50' fill='none' stroke='rgba(255,215,0,0.06)' stroke-width='1.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23topo)'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
 
-:root{
-  --bg:#060a17;
-  --bg-soft:#0e162c;
-  --accent:#00d4ff;
-  --accent-2:#007cf0;
-  --text:#ffffff;
-  --muted:#94a3b8;
-  --glass:rgba(255,255,255,0.06);
-  --border:rgba(255,255,255,0.08);
-}
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* =====================================================
-   RESET
-===================================================== */
+        /* =====================================================
+           AMBIENT GLOWS (Powers the Glassmorphism)
+        ===================================================== */
+        .ambient-glow {
+            position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.6;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+        .glow-1 { top: -10%; right: 10%; width: 50vw; height: 50vw; background: #5c3b99; }
+        .glow-2 { bottom: 10%; left: -10%; width: 40vw; height: 40vw; background: #1a3a7c; animation-delay: -3s; }
+        .glow-3 { top: 40%; left: 40%; width: 30vw; height: 30vw; background: rgba(255, 215, 0, 0.15); animation-delay: -6s; }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.1); opacity: 0.7; } }
 
-html{
-  scroll-behavior:smooth;
-}
+        /* =====================================================
+           GLASSMORPHIC TOP NAVBAR
+        ===================================================== */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 11, 31, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+            border-bottom: 1px solid var(--glass-border); z-index: 1000; transition: all 0.4s;
+        }
+        header.scrolled {
+            background: rgba(15, 11, 31, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 15px 8%;
+        }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; }
+        .logo span { color: var(--gold); }
 
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  overflow-x:hidden;
-}
+        nav { display: flex; gap: 40px; align-items: center; }
+        nav a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; transition: all 0.3s ease; position: relative; }
+        nav a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background: var(--gold); transition: width 0.3s ease; }
+        nav a:hover { color: #fff; } nav a:hover::after { width: 100%; }
 
-/* =====================================================
-   BACKGROUND SYSTEM
-===================================================== */
+        .nav-actions { display: flex; gap: 24px; align-items: center; }
+        .login-link { text-decoration: none; color: #fff; font-weight: 500; font-size: 0.95rem; transition: color 0.3s; }
+        .login-link:hover { color: var(--gold); }
 
-body::before{
-  content:"";
-  position:fixed;
-  width:100%;
-  height:100%;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size:70px 70px;
-  z-index:-3;
-}
+        /* =====================================================
+           PREMIUM GOLDEN BUTTONS
+        ===================================================== */
+        .btn {
+            padding: 12px 28px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; cursor: pointer; border: none; position: relative; overflow: hidden;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, rgba(255,215,0,0.9), rgba(200,160,0,0.7)); color: #000; 
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2); 
+        }
+        .btn-primary:hover { 
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4); transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(200,160,0,0.9));
+        }
+        .btn-secondary { 
+            background: var(--glass); color: white; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); 
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
 
-.orb{
-  position:fixed;
-  width:600px;
-  height:600px;
-  background:radial-gradient(circle,rgba(0,212,255,0.25),transparent 70%);
-  top:-200px;
-  right:-200px;
-  animation:float 14s ease-in-out infinite;
-  z-index:-2;
-}
+        /* =====================================================
+           HERO SECTION & CINEMATIC REVEAL
+        ===================================================== */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 140px 20px 60px; position: relative; }
+        
+        .hero-badge { 
+            background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); 
+            padding: 8px 18px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: var(--gold); 
+            margin-bottom: 30px; display: inline-block; letter-spacing: 1.5px; text-transform: uppercase; 
+        }
 
-@keyframes float{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(50px);}
-}
+        .cinematic-text .word { display: inline-block; opacity: 0; filter: blur(12px); transform: translateY(30px) scale(0.9); animation: blurReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: var(--delay); }
+        @keyframes blurReveal { to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
 
-/* =====================================================
-   CURSOR GLOW
-===================================================== */
+        .hero h1 { font-size: clamp(40px, 6vw, 76px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; max-width: 1000px; }
+        
+        .gradient-text { 
+            background: linear-gradient(to right, var(--gold), #fff, #ffeb80); 
+            background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; 
+            background-size: 200% auto; animation: shine 6s linear infinite; 
+        }
+        @keyframes shine { to { background-position: 200% center; } }
 
-.cursor{
-  position:fixed;
-  width:300px;
-  height:300px;
-  background:radial-gradient(circle,rgba(0,212,255,0.15),transparent 60%);
-  pointer-events:none;
-  transform:translate(-50%,-50%);
-  z-index:-1;
-}
+        .hero p { color: var(--text-muted); font-size: clamp(16px, 1.5vw, 20px); max-width: 700px; margin: 0 auto 40px; line-height: 1.6; }
+        .hero-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; z-index: 10; }
 
-/* =====================================================
-   NAVBAR
-===================================================== */
+        /* Trust Strip */
+        .trust-strip { 
+            width: 100%; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); 
+            padding: 30px 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); 
+            display: flex; flex-direction: column; align-items: center; gap: 15px; position: relative; z-index: 5; 
+        }
+        .trust-strip p { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; }
+        .trust-logos { display: flex; gap: 40px; color: #fff; font-weight: 600; font-size: 1.1rem; opacity: 0.6; flex-wrap: wrap; justify-content: center; }
 
-header{
-  position:fixed;
-  width:100%;
-  padding:22px 60px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  backdrop-filter:blur(14px);
-  background:rgba(6,10,23,0.7);
-  border-bottom:1px solid var(--border);
-  z-index:1000;
-}
+        /* =====================================================
+           BENTO GRID (Glassmorphism + Rotating Border)
+        ===================================================== */
+        .section { padding: 120px 8%; position: relative; z-index: 5; max-width: 1400px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 80px; }
+        .section-header h2 { font-size: clamp(32px, 4vw, 48px); font-weight: 700; letter-spacing: -1px; margin-bottom: 15px; }
 
-.logo{
-  font-weight:800;
-  font-size:22px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 300px; gap: 24px; }
 
-nav{
-  display:flex;
-  gap:40px;
-  align-items:center;
-}
+        @property --bg-angle { syntax: "<angle>"; inherits: true; initial-value: 0turn; }
+        @keyframes spin-border { to { --bg-angle: 1turn; } }
 
-nav a{
-  text-decoration:none;
-  color:var(--muted);
-  font-weight:500;
-  transition:.3s;
-  position:relative;
-}
+        /* Upgraded Glass Card */
+        .bento-card { 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; 
+            position: relative; transition: 0.4s ease; transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* The Golden Magic Border Effect */
+        .bento-card::before { 
+            content: ""; position: absolute; inset: -2px; z-index: -1; border-radius: inherit; 
+            background: conic-gradient(from var(--bg-angle), transparent 40%, var(--gold) 50%, rgba(255,255,255,0.8) 60%, transparent 70%); 
+            animation: spin-border 6s linear infinite; opacity: 0; transition: opacity 0.4s ease; 
+        }
+        .bento-card:hover::before { opacity: 1; }
+        
+        .card-wide { grid-column: span 8; } .card-square { grid-column: span 4; }
+        .bento-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); border-color: rgba(255,215,0,0.3); }
 
-nav a:hover{
-  color:white;
-}
+        .card-icon { 
+            width: 54px; height: 54px; border-radius: 14px; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; margin-bottom: 24px; 
+            border: 1px solid rgba(255,255,255,0.1); font-size: 24px; color: var(--gold);
+        }
+        .bento-card h3 { font-size: 1.6rem; font-weight: 600; margin-bottom: 12px; color: #fff; }
+        .bento-card p { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
 
-nav a::after{
-  content:"";
-  position:absolute;
-  width:0%;
-  height:2px;
-  background:var(--accent);
-  left:0;
-  bottom:-6px;
-  transition:.3s;
-}
+        /* National Impact Stats */
+        .impact-wrapper { background: radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 0%, transparent 70%); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 120px 8%; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; text-align: center; }
+        .stat-item h3 { font-size: clamp(54px, 6vw, 80px); font-weight: 800; color: #fff; line-height: 1; margin-bottom: 15px; }
+        .stat-item p { color: var(--gold); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 0.85rem; }
 
-nav a:hover::after{
-  width:100%;
-}
+        /* Reveal Engine */
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
 
-.nav-btn{
-  padding:10px 22px;
-  border-radius:40px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  color:white;
-  font-weight:600;
-}
-
-/* =====================================================
-   HERO
-===================================================== */
-
-.hero{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:0 20px;
-}
-
-.hero-content{
-  max-width:900px;
-}
-
-.hero h1{
-  font-size:64px;
-  font-weight:800;
-  line-height:1.1;
-  margin-bottom:20px;
-}
-
-.hero span{
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-.hero p{
-  color:var(--muted);
-  font-size:20px;
-  margin-bottom:40px;
-}
-
-.hero-buttons{
-  display:flex;
-  gap:20px;
-  justify-content:center;
-}
-
-.btn{
-  padding:15px 34px;
-  border-radius:40px;
-  font-weight:600;
-  cursor:pointer;
-  transition:.3s;
-  position:relative;
-  overflow:hidden;
-}
-
-.btn-primary{
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  border:none;
-  color:white;
-}
-
-.btn-secondary{
-  background:var(--glass);
-  border:1px solid var(--border);
-  color:white;
-}
-
-.btn:hover{
-  transform:translateY(-3px);
-}
-
-/* =====================================================
-   SECTION
-===================================================== */
-
-.section{
-  padding:140px 10%;
-}
-
-.section h2{
-  text-align:center;
-  font-size:42px;
-  margin-bottom:80px;
-}
-
-/* =====================================================
-   FEATURES GRID
-===================================================== */
-
-.features{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:40px;
-}
-
-.card{
-  background:var(--glass);
-  border:1px solid var(--border);
-  padding:40px;
-  border-radius:20px;
-  backdrop-filter:blur(15px);
-  transition:.4s;
-  transform-style:preserve-3d;
-}
-
-.card:hover{
-  border-color:var(--accent);
-  box-shadow:0 0 40px rgba(0,212,255,.3);
-}
-
-/* =====================================================
-   STATS
-===================================================== */
-
-.stats{
-  display:flex;
-  justify-content:center;
-  gap:100px;
-  text-align:center;
-}
-
-.stat h3{
-  font-size:52px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-.stat p{
-  color:var(--muted);
-}
-
-/* =====================================================
-   CTA
-===================================================== */
-
-.cta{
-  background:linear-gradient(135deg,var(--bg-soft),var(--bg));
-  padding:120px 10%;
-  text-align:center;
-  border-top:1px solid var(--border);
-  border-bottom:1px solid var(--border);
-}
-
-.cta h2{
-  font-size:40px;
-  margin-bottom:30px;
-}
-
-/* =====================================================
-   FOOTER
-===================================================== */
-
-footer{
-  padding:60px 10%;
-  text-align:center;
-  color:var(--muted);
-  border-top:1px solid var(--border);
-}
-
-/* =====================================================
-   SCROLL REVEAL
-===================================================== */
-
-.reveal{
-  opacity:0;
-  transform:translateY(40px);
-  transition:all .8s ease;
-}
-
-.reveal.active{
-  opacity:1;
-  transform:translateY(0);
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-
-@media(max-width:768px){
-  .hero h1{font-size:38px;}
-  .stats{flex-direction:column;gap:50px;}
-  header{padding:20px;}
-}
-
-</style>
+        /* Responsive */
+        @media(max-width: 992px) { 
+            .card-wide, .card-square { grid-column: span 12; } 
+            .bento-grid { grid-auto-rows: minmax(250px, auto); } 
+            nav { display: none; } 
+            .stats-grid { grid-template-columns: 1fr; gap: 60px; } 
+            header { padding: 15px 5%; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="orb"></div>
-<div class="cursor"></div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
 
-<header>
-  <div class="logo">CivicSewa</div>
-  <nav>
-    <a href="#features">Features</a>
-    <a href="#impact">Impact</a>
-    <a href="login.html">Login</a>
-    <a href="signup.html" class="nav-btn">Get Started</a>
-  </nav>
-</header>
+    <header id="navbar">
+        <a href="index.html" class="logo">
+            <i class="bi bi-buildings text-warning"></i> Civic<span>Sewa</span>
+        </a>
+        <nav>
+            <a href="#features">Platform</a>
+            <a href="#impact">National Impact</a>
+            <a href="login.html">View Demo</a>
+        </nav>
+        <div class="nav-actions">
+            <a href="login.html" class="login-link" id="headerLoginBtn">Sign In</a>
+            <a href="signup.html" class="btn btn-primary" id="headerSignupBtn">Join Platform</a>
+        </div>
+    </header>
 
-<section class="hero">
-  <div class="hero-content reveal">
-    <h1>Building <span>Transparent Governance</span><br>For Modern Cities</h1>
-    <p>Digital civic infrastructure empowering citizens nationwide.</p>
-    <div class="hero-buttons">
-      <a href="signup.html" class="btn btn-primary">Join CivicSewa</a>
-      <a href="#features" class="btn btn-secondary">Explore Platform</a>
-    </div>
-  </div>
-</section>
+    <main>
+        <section class="hero">
+            <div class="hero-badge cinematic-text"><span class="word" style="--delay: 0.1s;">Civic</span> <span class="word" style="--delay: 0.2s;">OS</span> <span class="word" style="--delay: 0.3s;">For</span> <span class="word" style="--delay: 0.4s;">Nepal</span></div>
+            
+            <h1 class="cinematic-text">
+                <span class="word" style="--delay: 0.4s;">Bridging</span> 
+                <span class="word" style="--delay: 0.5s;">The Gap Between</span><br>
+                <span class="word gradient-text" style="--delay: 0.6s;">Citizens & Ward Offices</span>
+            </h1>
+            
+            <p class="cinematic-text">
+                <span class="word" style="--delay: 0.9s;">Move beyond paperwork and fragmented communication. CivicSewa is Nepal’s unified digital platform for real-time issue reporting, Smart Sifarish, and transparent local governance.</span>
+            </p>
+            
+            <div class="hero-buttons cinematic-text">
+                <span class="word" style="--delay: 1.1s;">
+                    <a href="signup.html" class="btn btn-primary" id="heroMainBtn">Deploy for Your Ward</a>
+                </span>
+                <span class="word" style="--delay: 1.2s;">
+                    <a href="#features" class="btn btn-secondary">Explore Modules</a>
+                </span>
+            </div>
+        </section>
 
-<section id="features" class="section">
-  <h2 class="reveal">Platform Capabilities</h2>
-  <div class="features">
-    <div class="card reveal"><h3>Real-Time Reporting</h3><p>Geo-tagged civic complaint system.</p></div>
-    <div class="card reveal"><h3>Transparency Dashboard</h3><p>Public performance metrics.</p></div>
-    <div class="card reveal"><h3>Secure Payments</h3><p>Municipal digital billing.</p></div>
-    <div class="card reveal"><h3>AI Verification</h3><p>Automated validation engine.</p></div>
-  </div>
-</section>
+        <div class="trust-strip reveal">
+            <p>Infrastructure Designed For</p>
+            <div class="trust-logos">
+                <span>Lalitpur Metro</span>
+                <span>•</span>
+                <span>Kathmandu Metro</span>
+                <span>•</span>
+                <span>Bagmati Province</span>
+            </div>
+        </div>
 
-<section id="impact" class="section">
-  <h2 class="reveal">National Impact</h2>
-  <div class="stats">
-    <div class="stat reveal">
-      <h3 id="users">0</h3>
-      <p>Citizens Connected</p>
-    </div>
-    <div class="stat reveal">
-      <h3 id="issues">0</h3>
-      <p>Issues Resolved</p>
-    </div>
-    <div class="stat reveal">
-      <h3 id="cities">0</h3>
-      <p>Cities Onboarded</p>
-    </div>
-  </div>
-</section>
+        <section id="features" class="section">
+            <div class="section-header reveal">
+                <h2>System Capabilities</h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem;">Fixing the flaws of traditional, paper-based municipalities.</p>
+            </div>
+            
+            <div class="bento-grid">
+                <div class="bento-card card-wide reveal">
+                    <div class="card-icon"><i class="bi bi-geo-alt"></i></div>
+                    <h3>Geo-Tagged Issue Routing</h3>
+                    <p>Citizens pinpoint issues like potholes or water leaks with sub-meter accuracy via Live Maps. The system automatically routes the ticket to the specific Ward Department responsible for resolution.</p>
+                </div>
+                
+                <div class="bento-card card-square reveal" style="transition-delay: 0.1s;">
+                    <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <h3>Smart Sifarish</h3>
+                    <p>End the long lines at the ward. Digitize the application, tracking, and signing of official recommendation letters.</p>
+                </div>
+                
+                <div class="bento-card card-square reveal">
+                    <div class="card-icon"><i class="bi bi-robot"></i></div>
+                    <h3>AI Guidance Chatbot</h3>
+                    <p>Navigate complex civic processes instantly. Our AI Chatbot provides immediate answers to municipal regulations in both English and Nepali.</p>
+                </div>
+                
+                <div class="bento-card card-wide reveal" style="transition-delay: 0.1s;">
+                    <div class="card-icon"><i class="bi bi-bar-chart-steps"></i></div>
+                    <h3>Two-Way Transparency Dashboard</h3>
+                    <p>Unlike existing systems which focus solely on documents, CivicSewa creates a two-way street. Citizens track municipal response times, and admins get a real-time heat map of local issues.</p>
+                </div>
+            </div>
+        </section>
 
-<section class="cta reveal">
-  <h2>Join The Smart Governance Revolution</h2>
-  <a href="signup.html" class="btn btn-primary">Create Your Account</a>
-</section>
+        <section id="impact" class="impact-wrapper">
+            <div class="section-header reveal">
+                <h2>National Impact</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item reveal">
+                    <h3 id="users">0</h3>
+                    <p>Active Citizens Connected</p>
+                </div>
+                <div class="stat-item reveal" style="transition-delay: 0.1s;">
+                    <h3 id="issues">0</h3>
+                    <p>Civic Issues Resolved</p>
+                </div>
+                <div class="stat-item reveal" style="transition-delay: 0.2s;">
+                    <h3 id="cities">0</h3>
+                    <p>Wards Onboarded</p>
+                </div>
+            </div>
+        </section>
 
-<footer>
-  © 2026 CivicSewa | National Digital Civic Infrastructure
-</footer>
+        <section class="section" style="text-align: center; padding-bottom: 160px;">
+            <div class="reveal">
+                <h2 style="font-size: clamp(32px, 5vw, 56px); font-weight: 800; margin-bottom: 30px;">Ready to modernize your city?</h2>
+                <a href="signup.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.1rem;" id="footerMainBtn">Create Civic Account</a>
+            </div>
+        </section>
+    </main>
 
-<script>
+    <footer style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.5);">
+        © 2026 CivicSewa Platform | Built for the Hackathon.
+    </footer>
 
-/* =====================================================
-   CURSOR GLOW
-===================================================== */
+    <script type="module">
+        import { auth } from "./js/core/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { db } from "./js/core/firebase-config.js";
 
-const cursor=document.querySelector('.cursor');
-document.addEventListener('mousemove',e=>{
-  cursor.style.left=e.clientX+'px';
-  cursor.style.top=e.clientY+'px';
-});
+        // SMART AUTH ROUTING: If user is logged in, change landing page buttons to "Go To Dashboard"
+        onAuthStateChanged(auth, async (user) => {
+            if (user && user.emailVerified) {
+                try {
+                    const snap = await getDoc(doc(db, "users", user.uid));
+                    let targetUrl = "views/citizen/dashboard.html";
+                    
+                    if (snap.exists() && snap.data().role === "ward") {
+                        targetUrl = "views/ward/ward-dashboard.html";
+                    }
 
-/* =====================================================
-   SCROLL REVEAL ENGINE
-===================================================== */
+                    // Update UI Buttons
+                    document.getElementById('headerLoginBtn').innerText = "Dashboard";
+                    document.getElementById('headerLoginBtn').href = targetUrl;
+                    
+                    document.getElementById('headerSignupBtn').style.display = "none"; // Hide join button if logged in
+                    
+                    const heroBtn = document.getElementById('heroMainBtn');
+                    heroBtn.innerText = "Enter Dashboard";
+                    heroBtn.href = targetUrl;
 
-const reveals=document.querySelectorAll('.reveal');
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      entry.target.classList.add('active');
-    }
-  });
-},{threshold:0.2});
+                    const footerBtn = document.getElementById('footerMainBtn');
+                    footerBtn.innerText = "Return to Dashboard";
+                    footerBtn.href = targetUrl;
 
-reveals.forEach(r=>observer.observe(r));
+                } catch(e) { console.error("Error fetching role for landing page routing", e); }
+            }
+        });
+    </script>
 
-/* =====================================================
-   COUNTER TRIGGER WHEN VISIBLE
-===================================================== */
+    <script>
+        /* =====================================================
+           SCROLL REVEAL ENGINE
+        ===================================================== */
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
-function animateCounter(el,target){
-  let count=0;
-  const speed=target/200;
-  const update=setInterval(()=>{
-    count+=speed;
-    if(count>=target){
-      el.innerText=target.toLocaleString();
-      clearInterval(update);
-    }else{
-      el.innerText=Math.floor(count).toLocaleString();
-    }
-  },10);
-}
+        reveals.forEach(r => observer.observe(r));
 
-const statObserver=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      if(entry.target.id==="users") animateCounter(entry.target,12850);
-      if(entry.target.id==="issues") animateCounter(entry.target,9420);
-      if(entry.target.id==="cities") animateCounter(entry.target,52);
-      statObserver.unobserve(entry.target);
-    }
-  });
-},{threshold:0.5});
+        /* =====================================================
+           NUMBER COUNTER ANIMATION
+        ===================================================== */
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+                obj.innerHTML = Math.floor(easeOutProgress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end.toLocaleString() + "+";
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
 
-document.querySelectorAll('.stat h3').forEach(stat=>{
-  statObserver.observe(stat);
-});
+        const statObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    if(entry.target.id === "users") animateValue(entry.target, 0, 14250, 2000);
+                    if(entry.target.id === "issues") animateValue(entry.target, 0, 8940, 2000);
+                    if(entry.target.id === "cities") animateValue(entry.target, 0, 45, 1500);
+                    statObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
 
-/* =====================================================
-   3D CARD TILT
-===================================================== */
+        document.querySelectorAll('.stat-item h3').forEach(stat => statObserver.observe(stat));
 
-document.querySelectorAll('.card').forEach(card=>{
-  card.addEventListener('mousemove',e=>{
-    const rect=card.getBoundingClientRect();
-    const x=e.clientX-rect.left;
-    const y=e.clientY-rect.top;
-    const centerX=rect.width/2;
-    const centerY=rect.height/2;
-    const rotateX=((y-centerY)/20);
-    const rotateY=((centerX-x)/20);
-    card.style.transform=`rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  });
-  card.addEventListener('mouseleave',()=>{
-    card.style.transform="rotateX(0) rotateY(0)";
-  });
-});
-
-</script>
-
+        /* =====================================================
+           NAVBAR BACKGROUND ON SCROLL
+        ===================================================== */
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+    </script>
 </body>
 </html>
