@@ -1,0 +1,264 @@
+/* =========================================
+   CIVICSEWA GLOBAL DESIGN SYSTEM (V4 - Bulletproof)
+   Architecture: Deep Glassmorphism & Gold/Black Sidebar
+========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-base: #0f0b1f;
+    --text-main: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.65);
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 85px;
+    --gold: #FFD700;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    position: relative;
+    /* High-contrast background so the glass blur is visible */
+    background: radial-gradient(circle at 80% 20%, #2a1b4d, #0f0b1f 70%);
+    background-attachment: fixed;
+}
+
+/* --- THE AMBIENT GLOWS (Powers the Glass Effect) --- */
+.ambient-glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.8; /* Increased opacity for better glass refraction */
+}
+.glow-1 { top: -10%; right: 10%; width: 40vw; height: 40vw; background: #5c3b99; }
+.glow-2 { bottom: -20%; left: 15%; width: 40vw; height: 40vw; background: #1a3a7c; }
+
+/* --- Global Glass Component --- */
+.glass-box {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    color: var(--text-main);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* --- THE NEW GOLDEN & BLACK SIDEBAR --- */
+#sidebar {
+    width: var(--sidebar-width);
+    background-color: #050505; /* Deep black */
+    /* Subtle Golden Diagonal Pattern */
+    background-image: repeating-linear-gradient(45deg, rgba(255,215,0,0.03) 0px, rgba(255,215,0,0.03) 2px, transparent 2px, transparent 10px);
+    border-right: 1px solid rgba(255, 215, 0, 0.25);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: width 0.3s ease, padding 0.3s ease;
+    overflow-x: hidden;
+    box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 5px;
+    width: 100%;
+}
+
+.logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--gold); /* Gold Logo Text */
+}
+
+.nav-link {
+    color: #a0a0a0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    transition: 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background: rgba(255, 215, 0, 0.05);
+    color: var(--text-main);
+}
+
+/* Golden Active State */
+.nav-link.active {
+    background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, transparent 100%);
+    color: var(--gold);
+    font-weight: 600;
+    border-left: 3px solid var(--gold);
+}
+
+.sign-out-btn {
+    margin-top: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(220, 53, 69, 0.1);
+    color: #ff6b6b;
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: 0.3s;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+.sign-out-btn:hover { background: rgba(220, 53, 69, 0.3); color: #fff; }
+
+/* --- Collapsed Sidebar State --- */
+body.sidebar-collapsed #sidebar { width: var(--sidebar-collapsed-width); padding: 1.5rem 0.5rem; }
+body.sidebar-collapsed .main-wrapper { 
+    margin-left: var(--sidebar-collapsed-width); 
+    width: calc(100vw - var(--sidebar-collapsed-width)); 
+}
+body.sidebar-collapsed .nav-text, body.sidebar-collapsed .logo-wrap span { display: none; }
+body.sidebar-collapsed .sidebar-header { justify-content: center; }
+body.sidebar-collapsed .nav-link, body.sidebar-collapsed .sign-out-btn { justify-content: center; padding: 12px 0; border-left: none; }
+body.sidebar-collapsed .nav-link i, body.sidebar-collapsed .sign-out-btn i { margin: 0; font-size: 1.4rem; }
+
+/* --- Main Content Area (MATHEMATICAL OVERLAP FIX) --- */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    /* CRITICAL FIX: Forces the wrapper to only take the remaining screen space */
+    width: calc(100vw - var(--sidebar-width)); 
+    padding: 2rem 3rem;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    box-sizing: border-box; /* Ensures padding doesn't cause overflow */
+    min-height: 100vh;
+}
+
+/* --- Top Navbar --- */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    width: 100%;
+}
+
+.search-container {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 320px;
+}
+.search-container input { background: transparent; border: none; color: var(--text-main); outline: none; width: 100%; }
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: nowrap; /* Prevents header elements from stacking */
+}
+
+.lang-badge {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+
+/* --- Layout Grid (THE ANTI-OVERLAP ENGINE) --- */
+.content-layout {
+    display: grid;
+    /* Strict columns: Left area takes remaining space, Right panel is locked to 340px */
+    grid-template-columns: 1fr 340px; 
+    gap: 2rem;
+    align-items: start; /* Prevents items from stretching vertically and causing overflow */
+}
+
+/* Force layout to stack on smaller laptop screens to protect UI */
+@media (max-width: 1300px) {
+    .content-layout { grid-template-columns: 1fr; }
+}
+
+.greeting-title { font-size: 2.2rem; font-weight: 600; margin-bottom: 2rem; }
+
+/* --- 4x2 Modules Grid --- */
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 1.2rem;
+}
+
+.grid-card {
+    aspect-ratio: 1 / 1.15; 
+    min-height: 160px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 1rem 0.5rem; cursor: pointer; transition: all 0.2s ease;
+}
+.grid-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.grid-icon { font-size: 2.2rem; margin-bottom: 0.6rem; color: rgba(255,255,255,0.95); }
+.grid-title { font-size: 0.95rem; font-weight: 600; line-height: 1.25; }
+.grid-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.3; }
+
+/* Icon Colors */
+.icon-gold { color: var(--gold); filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
+.icon-news { color: #e9ecef; }
+.icon-weather { color: #f8f9fa; }
+.icon-air { color: #0dcaf0; }
+
+/* --- Right Sidebar Panels --- */
+.right-panels { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+.panel-block { padding: 1.5rem; }
+.panel-heading { font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem; }
+.bullet-list { padding-left: 1.2rem; margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
+
+/* Emergency Contacts */
+.emergency-btn {
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+}
+.em-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.em-police { background: rgba(13, 110, 253, 0.2); color: #8ab4f8; }
+.em-fire { background: rgba(220, 53, 69, 0.2); color: #f28b82; }
+.em-ambulance { background: rgba(25, 135, 84, 0.2); color: #81c995; }
+
+/* --- Sign Out Modal --- */
+.glass-modal .modal-content {
+    background: rgba(20, 15, 35, 0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+}

@@ -97,13 +97,16 @@ body {
 <nav class="navbar shadow-sm p-3" style="background:#2A4B79;color:white;">
     <div class="container-fluid">
         <span class="fw-bold">Ward Broadcast Channel</span>
-        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createModal">
+
+        <span>
+                <select id="languageSelect" class="form-select form-select-sm w-auto ms-3">
+                    <option value="en">English</option>
+                    <option value="np">नेपाली</option>
+                </select>
+        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createModal" style="border-radius: 10px; margin-top: 10px; margin-bottom: 10px;">
             + Create Broadcast
         </button>
-        <select> 
-            <option onclick=""> English </option>
-            <option value=""> नेपाली </option>
-        </select>
+        </span>
     </div>
 </nav>
 
