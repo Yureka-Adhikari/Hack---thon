@@ -2,198 +2,414 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CivicSewa - Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CivicSewa - National Smart Governance Infrastructure Platform for Nepal">
+    <title>CivicSewa | Next-Gen Local Governance</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="Color_mode.css">
+
     <style>
-        body { background-color: #f0f2f5; }
-        #sidebar { width: 260px; min-height: 100vh; background: #2A4B79; color: white; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 4px 15px; }
-        .nav-link.active { background: rgba(255,255,255,0.2); color: white; }
-        .card { border: none; border-radius: 12px; transition: 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .gradient-custom-1 {
-            background: #115bcb;
+        /* =====================================================
+           CIVICSEWA OFFICIAL PALETTE (Deep Space & Gold)
+           Matches base.css exactly for 1:1 consistency.
+        ===================================================== */
+        :root {
+            --bg-base: #0f0b1f;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.65);
+            --gold: #FFD700;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.08);
         }
-        .gradient-custom-2 {
-            background: #30cfd0;
-            background: -webkit-linear-gradient(to right, rgba(48,207,208,1), rgba(51,8,103,1));
-            background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(circle at top right, rgba(35, 20, 65, 0.9), rgba(15, 11, 31, 1)),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='topo' width='200' height='200' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 100s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50M0 150s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50M0 50s30-50 100-50 100 50 100 50v-2s-30-50-100-50-100 50-100 50' fill='none' stroke='rgba(255,215,0,0.06)' stroke-width='1.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23topo)'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        /* =====================================================
+           AMBIENT GLOWS (Powers the Glassmorphism)
+        ===================================================== */
+        .ambient-glow {
+            position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.6;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+        .glow-1 { top: -10%; right: 10%; width: 50vw; height: 50vw; background: #5c3b99; }
+        .glow-2 { bottom: 10%; left: -10%; width: 40vw; height: 40vw; background: #1a3a7c; animation-delay: -3s; }
+        .glow-3 { top: 40%; left: 40%; width: 30vw; height: 30vw; background: rgba(255, 215, 0, 0.15); animation-delay: -6s; }
+
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.1); opacity: 0.7; } }
+
+        /* =====================================================
+           GLASSMORPHIC TOP NAVBAR
+        ===================================================== */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 11, 31, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+            border-bottom: 1px solid var(--glass-border); z-index: 1000; transition: all 0.4s;
+        }
+        header.scrolled {
+            background: rgba(15, 11, 31, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 15px 8%;
+        }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; color: white; text-decoration: none; }
+        .logo span { color: var(--gold); }
+
+        nav { display: flex; gap: 40px; align-items: center; }
+        nav a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; transition: all 0.3s ease; position: relative; }
+        nav a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background: var(--gold); transition: width 0.3s ease; }
+        nav a:hover { color: #fff; } nav a:hover::after { width: 100%; }
+
+        .nav-actions { display: flex; gap: 24px; align-items: center; }
+        .login-link { text-decoration: none; color: #fff; font-weight: 500; font-size: 0.95rem; transition: color 0.3s; }
+        .login-link:hover { color: var(--gold); }
+
+        /* =====================================================
+           PREMIUM GOLDEN BUTTONS
+        ===================================================== */
+        .btn {
+            padding: 12px 28px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; cursor: pointer; border: none; position: relative; overflow: hidden;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, rgba(255,215,0,0.9), rgba(200,160,0,0.7)); color: #000; 
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2); 
+        }
+        .btn-primary:hover { 
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4); transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(200,160,0,0.9));
+        }
+        .btn-secondary { 
+            background: var(--glass); color: white; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); 
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+
+        /* =====================================================
+           HERO SECTION & CINEMATIC REVEAL
+        ===================================================== */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 140px 20px 60px; position: relative; }
+        
+        .hero-badge { 
+            background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); 
+            padding: 8px 18px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: var(--gold); 
+            margin-bottom: 30px; display: inline-block; letter-spacing: 1.5px; text-transform: uppercase; 
+        }
+
+        .cinematic-text .word { display: inline-block; opacity: 0; filter: blur(12px); transform: translateY(30px) scale(0.9); animation: blurReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: var(--delay); }
+        @keyframes blurReveal { to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
+
+        .hero h1 { font-size: clamp(40px, 6vw, 76px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; max-width: 1000px; }
+        
+        .gradient-text { 
+            background: linear-gradient(to right, var(--gold), #fff, #ffeb80); 
+            background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; 
+            background-size: 200% auto; animation: shine 6s linear infinite; 
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        .hero p { color: var(--text-muted); font-size: clamp(16px, 1.5vw, 20px); max-width: 700px; margin: 0 auto 40px; line-height: 1.6; }
+        .hero-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; z-index: 10; }
+
+        /* Trust Strip */
+        .trust-strip { 
+            width: 100%; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); 
+            padding: 30px 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); 
+            display: flex; flex-direction: column; align-items: center; gap: 15px; position: relative; z-index: 5; 
+        }
+        .trust-strip p { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; }
+        .trust-logos { display: flex; gap: 40px; color: #fff; font-weight: 600; font-size: 1.1rem; opacity: 0.6; flex-wrap: wrap; justify-content: center; }
+
+        /* =====================================================
+           BENTO GRID (Glassmorphism + Rotating Border)
+        ===================================================== */
+        .section { padding: 120px 8%; position: relative; z-index: 5; max-width: 1400px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 80px; }
+        .section-header h2 { font-size: clamp(32px, 4vw, 48px); font-weight: 700; letter-spacing: -1px; margin-bottom: 15px; }
+
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 300px; gap: 24px; }
+
+        @property --bg-angle { syntax: "<angle>"; inherits: true; initial-value: 0turn; }
+        @keyframes spin-border { to { --bg-angle: 1turn; } }
+
+        /* Upgraded Glass Card */
+        .bento-card { 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; 
+            position: relative; transition: 0.4s ease; transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* The Golden Magic Border Effect */
+        .bento-card::before { 
+            content: ""; position: absolute; inset: -2px; z-index: -1; border-radius: inherit; 
+            background: conic-gradient(from var(--bg-angle), transparent 40%, var(--gold) 50%, rgba(255,255,255,0.8) 60%, transparent 70%); 
+            animation: spin-border 6s linear infinite; opacity: 0; transition: opacity 0.4s ease; 
+        }
+        .bento-card:hover::before { opacity: 1; }
+        
+        .card-wide { grid-column: span 8; } .card-square { grid-column: span 4; }
+        .bento-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); border-color: rgba(255,215,0,0.3); }
+
+        .card-icon { 
+            width: 54px; height: 54px; border-radius: 14px; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; margin-bottom: 24px; 
+            border: 1px solid rgba(255,255,255,0.1); font-size: 24px; color: var(--gold);
+        }
+        .bento-card h3 { font-size: 1.6rem; font-weight: 600; margin-bottom: 12px; color: #fff; }
+        .bento-card p { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
+
+        /* National Impact Stats */
+        .impact-wrapper { background: radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 0%, transparent 70%); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 120px 8%; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; text-align: center; }
+        .stat-item h3 { font-size: clamp(54px, 6vw, 80px); font-weight: 800; color: #fff; line-height: 1; margin-bottom: 15px; }
+        .stat-item p { color: var(--gold); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 0.85rem; }
+
+        /* Reveal Engine */
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Responsive */
+        @media(max-width: 992px) { 
+            .card-wide, .card-square { grid-column: span 12; } 
+            .bento-grid { grid-auto-rows: minmax(250px, auto); } 
+            nav { display: none; } 
+            .stats-grid { grid-template-columns: 1fr; gap: 60px; } 
+            header { padding: 15px 5%; }
         }
     </style>
 </head>
-
 <body>
-<div class="d-flex">
-    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
-        <h3 class="p-3 fw-bold">CivicSewa</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-<li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="bi bi-grid-1x2 me-2"></i> <span data-i18n="dashboardNav">Dashboard</span></a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> <span data-i18n="myComplaintsNav">My Complaints</span></a></li>
-            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> <span data-i18n="documentsNav">Documents</span></a></li>
-            <li><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> <span data-i18n="broadcastNav">Broadcast Channel</span></a></li>
-            <li><a href="road.html" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> <span data-i18n="roadNav">Road</span> </a></li>
-            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> <span data-i18n="chatbotNav">Guidance Chatbot</span> </a></li>
-            <li><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> <span data-i18n="settingsNav">Settings</span></a></li>
-        </ul>
-        <hr>
-        <button id="logoutBtn" class="btn btn-outline-light w-100" data-i18n="signOut">Sign Out</button>
-    </div>
 
-    <div class="flex-grow-1 d-flex flex-column" style="background-color:#2A4B79;color: white; min-height: 100vh; margin-left: 260px;">
-        <nav class="navbar navbar-expand shadow-sm p-3">
-            <div class="container-fluid">
-                <input type="text" class="form-control w-25" placeholder="Search...">
-                <div class="ms-auto d-flex align-items-center">
-                    <span class="badge bg-primary me-3" id="uWard">Ward --</span>
-                    <strong id="uNameTop">User Name</strong>
-                    <!-- language selector -->
-                    <select id="languageSelect" class="form-select form-select-sm w-auto ms-3">
-                        <option value="en">English</option>
-                        <option value="np">नेपाली</option>
-                    </select>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <header id="navbar">
+        <a href="index.html" class="logo">
+            <i class="bi bi-buildings text-warning"></i> Civic<span>Sewa</span>
+        </a>
+        <nav>
+            <a href="#features">Platform</a>
+            <a href="#impact">National Impact</a>
+            <a href="login.html">View Demo</a>
+        </nav>
+        <div class="nav-actions">
+            <a href="login.html" class="login-link" id="headerLoginBtn">Sign In</a>
+            <a href="signup.html" class="btn btn-primary" id="headerSignupBtn">Join Platform</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-badge cinematic-text"><span class="word" style="--delay: 0.1s;">Civic</span> <span class="word" style="--delay: 0.2s;">OS</span> <span class="word" style="--delay: 0.3s;">For</span> <span class="word" style="--delay: 0.4s;">Nepal</span></div>
+            
+            <h1 class="cinematic-text">
+                <span class="word" style="--delay: 0.4s;">Bridging</span> 
+                <span class="word" style="--delay: 0.5s;">The Gap Between</span><br>
+                <span class="word gradient-text" style="--delay: 0.6s;">Citizens & Ward Offices</span>
+            </h1>
+            
+            <p class="cinematic-text">
+                <span class="word" style="--delay: 0.9s;">Move beyond paperwork and fragmented communication. CivicSewa is Nepal’s unified digital platform for real-time issue reporting, Smart Sifarish, and transparent local governance.</span>
+            </p>
+            
+            <div class="hero-buttons cinematic-text">
+                <span class="word" style="--delay: 1.1s;">
+                    <a href="signup.html" class="btn btn-primary" id="heroMainBtn">Deploy for Your Ward</a>
+                </span>
+                <span class="word" style="--delay: 1.2s;">
+                    <a href="#features" class="btn btn-secondary">Explore Modules</a>
+                </span>
+            </div>
+        </section>
+
+        <div class="trust-strip reveal">
+            <p>Infrastructure Designed For</p>
+            <div class="trust-logos">
+                <span>Lalitpur Metro</span>
+                <span>•</span>
+                <span>Kathmandu Metro</span>
+                <span>•</span>
+                <span>Bagmati Province</span>
+            </div>
+        </div>
+
+        <section id="features" class="section">
+            <div class="section-header reveal">
+                <h2>System Capabilities</h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem;">Fixing the flaws of traditional, paper-based municipalities.</p>
+            </div>
+            
+            <div class="bento-grid">
+                <div class="bento-card card-wide reveal">
+                    <div class="card-icon"><i class="bi bi-geo-alt"></i></div>
+                    <h3>Geo-Tagged Issue Routing</h3>
+                    <p>Citizens pinpoint issues like potholes or water leaks with sub-meter accuracy via Live Maps. The system automatically routes the ticket to the specific Ward Department responsible for resolution.</p>
                 </div>
                 
-            </div>
-        </nav>
-
-        <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
-            <h2 class="mb-4"><span data-i18n="welcome">Welcome</span>, <span id="uNameMain">Citizen</span></h2>
-
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="card p-4 shadow-sm text-center" style="height: 210px; top: 5px; bottom: 20px;">
-                        <i class="bi bi-plus-circle text-primary fs-1 mb-2"></i>
-                        <h5 data-i18n="submitComplaint">Submit Complaint</h5>
-                        <p class="small text-muted" data-i18n="reportIssues">Report local issues!</p>
-                            <button class="btn btn-primary"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#complaintModal"
-                                    data-i18n="createNew">
-                            Create New
-                            </button>
-                    </div>
-                    <div class="card p-4 shadow-sm" style="height: 250px; top: 20px;">
-                        <h5 class="mb-3" data-i18n="quickActions">Quick Actions</h5>
-                        <button id="quickWater" class="btn btn-primary w-100 mb-2" data-i18n="noWater">No Water</button>
-                        <button id="quickElectric" class="btn btn-warning w-100 mb-2" data-i18n="noElectricity">No Electricity</button>
-                        <button id="quickRoad" class="btn btn-danger w-100" data-i18n="roadDamage">Road Damage</button>
-
-                    </div>
+                <div class="bento-card card-square reveal" style="transition-delay: 0.1s;">
+                    <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <h3>Smart Sifarish</h3>
+                    <p>End the long lines at the ward. Digitize the application, tracking, and signing of official recommendation letters.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card p-4 shadow-sm h-100 text-center" style="height: 210px; top: 5px; bottom: 20px;">
-                        <i class="bi bi-chat-dots fs-1 mb-2"></i>
-                        <h5 data-i18n="myComplaintsCard">My Complaints</h5>
-                        <div class="mb-3">
-                            <div style="margin: 15px 0;">
-                                <div style="position: relative; padding: 20px 0;">
-                                    <!-- Progress line background -->
-                                    <div style="position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: #e0e0e0;"></div>
-                                    <!-- Blue segment (Submitted to In Progress) -->
-                                    <div id="progressSegment1" style="position: absolute; top: 15px; left: 0; width: 0%; height: 4px; background: linear-gradient(to right, #0d6efd 0%, #ffc107 100%);"></div>
-                                    <!-- Yellow segment (In Progress to Resolved) -->
-                                    <div id="progressSegment2" style="position: absolute; top: 15px; left: 50%; width: 0%; height: 4px; background: linear-gradient(to right, #ffc107 0%, #28a745 100%);"></div>
-                                    
-                                    <!-- Nodes -->
-                                    <div style="display: flex; justify-content: space-between; position: relative; z-index: 1;">
-                                        <div id="nodeSubmitted" class="text-center" style="flex: 1;">
-                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #0d47a1; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusSubmitted">Submitted</small>
-                                        </div>
-                                        <div id="nodeInProgress" class="text-center" style="flex: 1;">
-                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #ffc107; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusInProgress">In Progress</small>
-                                        </div>
-                                        <div id="nodeResolved" class="text-center" style="flex: 1;">
-                                            <div class="node-circle" style="width: 28px; height: 28px; border-radius: 50%; background: #28a745; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</div>
-                                            <small style="display: block; margin-top: 10px; font-size: 12px; color: #333;" data-i18n="statusResolved">Resolved</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                            <div id="latestComplaintBox" class="mt-3 text-start">
-                            <h6 id="latestTitle">No complaints yet</h6>
-                            <p class="small mb-1"><strong data-label="status">Status:</strong> <span id="latestStatus">-</span></p>
-                            <p class="small mb-1"><strong data-label="category">Category:</strong> <span id="latestCategory">-</span></p>
-                            <p class="small"><strong data-label="location">Location:</strong> <span id="latestLocation">-</span></p>
-                            </div>
-
-                            <button id="viewComplaintBtn" class="btn btn-primary mt-2" style="font-size: 12px; padding: 6px 12px;" data-i18n="viewComplaint">
-                            View Complaint
-                            </button>
-
-                    </div>
+                
+                <div class="bento-card card-square reveal">
+                    <div class="card-icon"><i class="bi bi-robot"></i></div>
+                    <h3>AI Guidance Chatbot</h3>
+                    <p>Navigate complex civic processes instantly. Our AI Chatbot provides immediate answers to municipal regulations in both English and Nepali.</p>
                 </div>
-                <div class="col-md-5">
-                    <div class="card p-4 shadow-sm" style="height: 250px; width:300px; top: 20px;">
-                        <h5 class="mb-3" data-i18n="recentUpdates">Recent Updates</h5>
-                        <ul class="list-group list-group-flush" id="updatesList" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Dynamically populated from broadcasts -->
-                        </ul>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card p-4 shadow-sm" style="height: 170px; width:300px; top: 40px;">
-                            <h5 class="mb-3" style="background-color: #dc3545; color: white; padding: 10px; border-radius: 5px;" data-i18n="emergencyAlerts">Emergency Alerts</h5>
-                            <ul class="list-group list-group-flush" id="emergencyList" style="max-height: 300px; overflow-y: auto;">
-                                <!-- Dynamically populated from broadcasts -->
-                            </ul>
-
-                    </div>
+                
+                <div class="bento-card card-wide reveal" style="transition-delay: 0.1s;">
+                    <div class="card-icon"><i class="bi bi-bar-chart-steps"></i></div>
+                    <h3>Two-Way Transparency Dashboard</h3>
+                    <p>Unlike existing systems which focus solely on documents, CivicSewa creates a two-way street. Citizens track municipal response times, and admins get a real-time heat map of local issues.</p>
                 </div>
             </div>
+        </section>
 
-        </div>
-    </div>
-</div>
+        <section id="impact" class="impact-wrapper">
+            <div class="section-header reveal">
+                <h2>National Impact</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item reveal">
+                    <h3 id="users">0</h3>
+                    <p>Active Citizens Connected</p>
+                </div>
+                <div class="stat-item reveal" style="transition-delay: 0.1s;">
+                    <h3 id="issues">0</h3>
+                    <p>Civic Issues Resolved</p>
+                </div>
+                <div class="stat-item reveal" style="transition-delay: 0.2s;">
+                    <h3 id="cities">0</h3>
+                    <p>Wards Onboarded</p>
+                </div>
+            </div>
+        </section>
 
-<!-- Complaint Modal -->
-<div class="modal fade" id="complaintModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Submit Complaint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <section class="section" style="text-align: center; padding-bottom: 160px;">
+            <div class="reveal">
+                <h2 style="font-size: clamp(32px, 5vw, 56px); font-weight: 800; margin-bottom: 30px;">Ready to modernize your city?</h2>
+                <a href="signup.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.1rem;" id="footerMainBtn">Create Civic Account</a>
             </div>
-            <div class="modal-body">
-                <form id="complaintForm">
-                    <div class="mb-3">
-                        <label class="form-label">Complaint Category</label>
-                        <select id="category" class="form-select" required>
-                            <option value="">Select Category</option>
-                            <option value="Water">No Water</option>
-                            <option value="Electricity">No Electricity</option>
-                            <option value="Road">Road Damage</option>
-                            <option value="Waste">Garbage Collection</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" id="title" class="form-control" placeholder="Brief description" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea id="description" class="form-control" rows="4" placeholder="Detailed description" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Location</label>
-                        <input type="text" id="location" class="form-control" placeholder="Where is the issue?" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="submitComplaintBtn">Submit Complaint</button>
-            </div>
-        </div>
-    </div>
-</div>
+        </section>
+    </main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="dashboard.js"></script>
+    <footer style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.5);">
+        © 2026 CivicSewa Platform | Built for the Hackathon.
+    </footer>
+
+    <script type="module">
+        import { auth } from "./js/core/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { db } from "./js/core/firebase-config.js";
+
+        // SMART AUTH ROUTING: If user is logged in, change landing page buttons to "Go To Dashboard"
+        onAuthStateChanged(auth, async (user) => {
+            if (user && user.emailVerified) {
+                try {
+                    const snap = await getDoc(doc(db, "users", user.uid));
+                    let targetUrl = "views/citizen/dashboard.html";
+                    
+                    if (snap.exists() && snap.data().role === "ward") {
+                        targetUrl = "views/ward/ward-dashboard.html";
+                    }
+
+                    // Update UI Buttons
+                    document.getElementById('headerLoginBtn').innerText = "Dashboard";
+                    document.getElementById('headerLoginBtn').href = targetUrl;
+                    
+                    document.getElementById('headerSignupBtn').style.display = "none"; // Hide join button if logged in
+                    
+                    const heroBtn = document.getElementById('heroMainBtn');
+                    heroBtn.innerText = "Enter Dashboard";
+                    heroBtn.href = targetUrl;
+
+                    const footerBtn = document.getElementById('footerMainBtn');
+                    footerBtn.innerText = "Return to Dashboard";
+                    footerBtn.href = targetUrl;
+
+                } catch(e) { console.error("Error fetching role for landing page routing", e); }
+            }
+        });
+    </script>
+
+    <script>
+        /* =====================================================
+           SCROLL REVEAL ENGINE
+        ===================================================== */
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+        reveals.forEach(r => observer.observe(r));
+
+        /* =====================================================
+           NUMBER COUNTER ANIMATION
+        ===================================================== */
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+                obj.innerHTML = Math.floor(easeOutProgress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end.toLocaleString() + "+";
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        const statObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    if(entry.target.id === "users") animateValue(entry.target, 0, 14250, 2000);
+                    if(entry.target.id === "issues") animateValue(entry.target, 0, 8940, 2000);
+                    if(entry.target.id === "cities") animateValue(entry.target, 0, 45, 1500);
+                    statObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.stat-item h3').forEach(stat => statObserver.observe(stat));
+
+        /* =====================================================
+           NAVBAR BACKGROUND ON SCROLL
+        ===================================================== */
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+    </script>
 </body>
 </html>
