@@ -1,4 +1,31 @@
-import { setupFileUpload } from "./fileHandler.js";
+import { auth, db } from "../core/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+// Auth guard + load user info
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    const nameEl = document.getElementById("uNameTop");
+    const wardEl = document.getElementById("uWard");
+    const avatarEl = document.getElementById("userAvatar");
+    if (nameEl) nameEl.innerText = data.fullName || "Citizen";
+    if (wardEl)
+      wardEl.innerText = `Ward ${data.wardNumber || "--"}, ${data.municipality || "--"}`;
+    if (avatarEl)
+      avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName || "Citizen")}&background=random`;
+  }
+});
+
+import { setupFileUpload } from "../core/fileHandler.js";
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
 const chatBody = document.getElementById("chatBody");
@@ -13,7 +40,7 @@ let attachedFile = null;
 let messages = [];
 
 // REPLACING LEAKED KEY & INCORRECT MODEL STRING
-const API_KEY = "AIzaSyC2R-7E1XV9tJr-5FsVwnaJ4Q7PPlgZ9O8";
+const API_KEY = "";
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash", // Corrected from 2.5
@@ -35,6 +62,7 @@ function addMessage(text, type) {
   msg.classList.add("message", type);
 
   const content = document.createElement("div");
+  content.classList.add("content");
   if (type === "ai") {
     content.innerHTML = text;
   } else {
@@ -75,20 +103,25 @@ function formatAIResponse(text) {
 }
 
 async function simulateAI(userText) {
-  typingIndicator.classList.remove("hidden");
+  typingIndicator.classList.remove("d-none");
   chatBody.scrollTop = chatBody.scrollHeight;
 
   try {
-    const prompt = `You are a helpful civic services assistant for CivicSewa in Nepal. User question: ${userText}`;
+    const lang = localStorage.getItem("lang") || "en";
+    const langInstruction =
+      lang === "np"
+        ? "Always respond in Nepali (Devanagari script)."
+        : "Always respond in English.";
+    const prompt = `You are a helpful civic services assistant for CivicSewa, a digital governance platform for Nepal. You help citizens with municipal procedures, ward office processes, Smart Sifarish, issue reporting, and local government regulations. ${langInstruction} User question: ${userText}`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const aiText = response.text();
 
-    typingIndicator.classList.add("hidden");
+    typingIndicator.classList.add("d-none");
     addMessage(formatAIResponse(aiText), "ai");
   } catch (error) {
     console.error("AI Error:", error);
-    typingIndicator.classList.add("hidden");
+    typingIndicator.classList.add("d-none");
     addMessage(
       "I'm sorry, I'm having trouble connecting. Please check your API key status.",
       "ai",

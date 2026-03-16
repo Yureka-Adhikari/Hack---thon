@@ -1,8 +1,5 @@
-import { auth, db } from "./firebase-config.js";
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { auth, db } from "../core/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -11,7 +8,25 @@ import {
   orderBy,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { translateBroadcast } from "./translator.js";
+
+// ===== LINGVA TRANSLATION =====
+const translateCache = {};
+async function lingvaTranslate(text, targetLang) {
+  if (!text || targetLang === "en") return text;
+  const cacheKey = `${targetLang}:${text}`;
+  if (translateCache[cacheKey]) return translateCache[cacheKey];
+  try {
+    const res = await fetch(
+      `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
+    );
+    const json = await res.json();
+    const translated = json.translation || text;
+    translateCache[cacheKey] = translated;
+    return translated;
+  } catch {
+    return text;
+  }
+}
 
 let cachedBroadcasts = [];
 let userWard = "N/A";
@@ -82,12 +97,20 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // ===== RENDER =====
+window._renderBroadcasts = renderBroadcasts;
+
 async function renderBroadcasts() {
-  const container = document.querySelector(".row.g-4");
+  const container = document.getElementById("broadcastContainer");
   if (!container) return;
   const lang = localStorage.getItem("lang") || "en";
+  const filter = window._broadcastFilter || "all";
 
-  if (cachedBroadcasts.length === 0) {
+  const filtered =
+    filter === "emergency"
+      ? cachedBroadcasts.filter((b) => b.emergency)
+      : cachedBroadcasts;
+
+  if (filtered.length === 0) {
     container.innerHTML = `<div class="col-12 text-center mt-5 text-muted">${t("noBroadcasts")}</div>`;
     return;
   }
@@ -100,9 +123,12 @@ async function renderBroadcasts() {
   }
 
   const translatedList = await Promise.all(
-    cachedBroadcasts.map(async (data) => {
+    filtered.map(async (data) => {
       if (lang !== "np") return data;
-      const { title, content } = await translateBroadcast(data, lang);
+      const [title, content] = await Promise.all([
+        lingvaTranslate(data.title, lang),
+        lingvaTranslate(data.content, lang),
+      ]);
       return { ...data, title, content };
     }),
   );
@@ -118,17 +144,28 @@ async function renderBroadcasts() {
     const badgeBg = data.emergency ? "#dc3545" : `#${catStyle.color}`;
 
     container.innerHTML += `
-      <div class="col-md-6 col-lg-4">
-        <div class="card broadcast-card shadow-sm h-100 ${data.emergency ? "emergency" : ""}"
-             style="border-left:5px solid ${borderColor}; border-radius:12px;">
-          <div class="card-body">
-            <span class="badge mb-2" style="background-color:${badgeBg}; color:white;">${badgeText}</span>
-            <h5 class="card-title ${data.emergency ? "text-danger fw-bold" : ""}">
-              ${data.emergency ? '<i class="bi bi-exclamation-triangle-fill me-1"></i>' : ""}${data.title}
-            </h5>
-            <p class="text-muted small mb-2">${dateString}</p>
-            <p class="card-text">${data.content}</p>
+      <div class="glass-box col-md-6 col-lg-4 mb-3">
+        <div style="
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: rgba(43, 43, 43, 0.89);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-left: 4px solid ${borderColor};
+          cursor: pointer;
+          transition: 0.2s ease;
+          height: 100%;
+        " onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'"
+           onmouseout="this.style.transform='';this.style.boxShadow=''">
+          <div class="mb-2">
+            <span class="badge me-1" style="background:${badgeBg}; color:${data.emergency ? "#fff" : data.category === "Electricity" ? "#000" : "#fff"}; font-size:0.65rem;">
+              ${badgeText}
+            </span>
+            <span class="text-muted" style="font-size:0.7rem;">${dateString}</span>
           </div>
+          <div class="fw-bold text-light mb-1" style="font-size:0.95rem;">
+            ${data.emergency ? '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>' : ""}${data.title}
+          </div>
+          <div style="font-size:0.82rem; color: rgba(255,255,255,0.6); line-height:1.4;">${data.content}</div>
         </div>
       </div>`;
   });
@@ -164,7 +201,4 @@ if (langSelect) {
   });
 }
 
-// ===== LOGOUT =====
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  signOut(auth).then(() => (window.location.href = "login.html"));
-});
+// Logout handled by confirmSignOutBtn modal in HTML

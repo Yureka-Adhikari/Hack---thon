@@ -4,35 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicSewa - Live Issue Map</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/citizen.css">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        
-        .main-content {min-height: 100vh; display: flex; flex-direction: column; }
-        #map { height: calc(100vh - 70px); width: 100%; z-index: 1; }
-
-        /* UI Overlays */
-
-        .legend-panel {
-            position: absolute; top: 90px; right: 20px; background: white; padding: 20px; 
-            border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); z-index: 1000; 
-            width: 280px; max-height: calc(100vh - 120px); overflow-y: auto;
+        /* =========================================
+           SCOPED MAP STYLES (Preserved for Leaflet)
+        ========================================= */
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 220px);
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 1;
         }
-
-        .legend-item { display: flex; align-items: center; margin-bottom: 12px; }
         
-        .legend-icon-sm {
-            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; margin-right: 12px; color: white; font-size: 14px;
-            border: 2px solid white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        #map { height: 100%; width: 100%; }
+
+        /* Floating Map Buttons */
+        .map-floating-btn {
+            position: absolute;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.3s ease;
+        }
+        .map-floating-btn:hover { transform: scale(1.05); }
+        
+        #addIssueBtn { bottom: 20px; right: 80px; border-radius: 30px; padding: 10px 20px; font-weight: 600; }
+        #locateBtn { 
+            bottom: 20px; right: 20px; width: 45px; height: 45px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.9); color: var(--bg-base); border: none; font-size: 1.2rem;
         }
 
         /* Marker Color Classes */
+        .legend-icon-sm {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; color: white; font-size: 14px;
+            border: 2px solid white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
         .marker-road { background-color: #dc3545; }
         .marker-water { background-color: #0d6efd; }
         .marker-electricity { background-color: #ffc107; }
@@ -45,679 +62,571 @@
         .user-marker { width: 25px; height: 25px; background: #9b59b6; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(0.9); } 70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(155, 89, 182, 0); } 100% { transform: scale(0.9); } }
 
-        .locate-btn { position: absolute; bottom: 30px; right: 30px; z-index: 1000; background: white; width: 55px; height: 55px; border-radius: 50%; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; font-size: 24px; color: #2A4B79; }
-        #sidebar { width: 260px; min-height: 100vh; background: #2A4B79; color: white; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 4px 15px; }
-        .nav-link.active { background: rgba(255,255,255,0.2); color: white; }
-        .card { border: none; border-radius: 12px; transition: 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .gradient-custom-1 {
-            background: #115bcb;
+        /* Custom Filter Checkboxes for Glass UI */
+        .filter-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px; border-radius: 10px;
+            background: rgba(255,255,255,0.03); margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;
         }
-        .gradient-custom-2 {
-            background: #30cfd0;
-            background: -webkit-linear-gradient(to right, rgba(48,207,208,1), rgba(51,8,103,1));
-            background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
-        }
+        .filter-item:hover { background: rgba(255,255,255,0.08); }
+        .filter-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
 
-         .map-search {
-            position: absolute;
-            top: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            width: 400px;
-            max-width: 90%;
+        /* Search Results Dropdown */
+        .search-results {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: rgba(20, 15, 35, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-height: 300px; overflow-y: auto; z-index: 1001; margin-top: 10px; color: white;
         }
+        .search-result-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; }
+        .search-result-item:hover { background: rgba(255,255,255,0.1); }
+        .search-result-title { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
+        .search-result-desc { font-size: 0.8rem; color: var(--text-muted); }
+        .type-location { background: rgba(13, 110, 253, 0.3); color: #8ab4f8; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px; }
 
-        .map-search input {
-            width: 100%;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            font-size: 14px;
-        }
-
-        .map-search input:focus {
-            outline: none;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
-        }
+        /* Leaflet Popup Override for Dark Theme */
+        .leaflet-popup-content-wrapper { background: #1a1625; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+        .leaflet-popup-tip { background: #1a1625; }
+        .leaflet-container a.leaflet-popup-close-button { color: white; }
     </style>
 </head>
-
 <body>
-    <div class="d-flex" style="height: 100vh; width: 100%;">
-        <div id="sidebar" class="d-flex flex-column p-3">
-        <h3 class="p-3 fw-bold">CivicSewa</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> <span data-i18n="dashboardNav">Dashboard</span></a></li>
-            <li class="nav-item"><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> <span data-i18n="myComplaintsNav">My Complaints</span></a></li>
-            <li class="nav-item"><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> <span data-i18n="documentsNav">Documents</span></a></li>
-            <li class="nav-item"><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> <span data-i18n="broadcastNav">Broadcast Channel</span></a></li>
-            <li class="nav-item"><a href="road.html" class="nav-link active"><i class="bi bi-signpost-2 me-2"></i> <span data-i18n="roadNav">Road</span> </a></li>
-            <li class="nav-item"><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> <span data-i18n="chatbotNav">Guidance Chatbot</span> </a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link"><i class="bi bi-gear me-2"></i> <span data-i18n="settingsNav">Settings</span></a></li>
-        </ul>
-        <hr>
-        <button id="logoutBtn" class="btn btn-outline-light w-100" data-i18n="signOut">Sign Out</button>
-    </div>
 
-        <div class="main-content flex-grow-1">
-            <nav class="navbar navbar-expand shadow-sm p-3">
-            <div class="container-fluid">
-                <div class="map-search">
-                    <input type="text" id="searchInput" placeholder="Search for issues, location...">
-                </div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
 
-                <div class="ms-auto d-flex align-items-center">
-                    <span class="badge bg-primary me-3" id="uWard">Ward --</span>
-                    <strong id="uNameTop">User Name</strong>
-                    <!-- language selector -->
-                    <select id="languageSelect" class="form-select form-select-sm w-auto ms-3">
-                        <option value="en">English</option>
-                        <option value="np">नेपाली</option>
-                    </select>
+<nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-wrap">
+                <i class="bi bi-buildings"></i> 
+                <span class="nav-text">CivicSewa</span>
+            </div>
+            <i class="bi bi-list fs-3 text-secondary" id="sidebarToggle" style="cursor: pointer; transition: 0.2s;"></i>
+        </div>
+        
+        <a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2"></i> <span class="nav-text">Dashboard</span></a>
+        <a href="my-complaints.html" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span class="nav-text">My Complaints</span></a>
+        
+        <a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf"></i> <span class="nav-text">Documents</span></a>
+        
+        <a href="broadcast.html" class="nav-link"><i class="bi bi-megaphone"></i> <span class="nav-text">Broadcast</span></a>
+        
+        <a href="road.html" class="nav-link active"><i class="bi bi-geo-alt"></i> <span class="nav-text">Map</span></a>
+        
+        <a href="chatbot.html" class="nav-link"><i class="bi bi-robot"></i> <span class="nav-text">Chatbot</span></a>
+        <a href="settings.html" class="nav-link"><i class="bi bi-gear"></i> <span class="nav-text">Settings</span></a>
+        
+        <button id="logoutBtn" class="sign-out-btn w-100 border-0 mt-auto" data-bs-toggle="modal" data-bs-target="#signOutModal">
+            <i class="bi bi-box-arrow-right"></i> <span class="nav-text">Sign Out</span>
+        </button>
+    </nav>
+    <main class="main-wrapper">
+        
+        <header class="top-nav">
+            <div class="search-container position-relative" style="width: 450px;">
+                <i class="bi bi-search text-secondary"></i>
+                <input type="text" id="searchInput" placeholder="Search for locations or addresses...">
+                <div class="search-results" id="searchResults" style="display: none;"></div>
+            </div>
+            
+            <div class="profile-section">
 
-        </nav>
-
-            <div style="position: relative;">
-
-                <div id="map"></div>
-
-                <div class="legend-panel">
-                    <h5 class="mb-3"><i class="bi bi-funnel-fill me-2"></i>Filters</h5>
-                    
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="broadcast" id="fBroad" checked>
-                        <span class="legend-icon-sm marker-broadcast"><i class="bi bi-broadcast"></i></span>
-                        <label for="fBroad">Official Broadcasts</label>
-                    </div>
-
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="strike" id="fStrike" checked>
-                        <span class="legend-icon-sm marker-strike"><i class="bi bi-exclamation-octagon"></i></span>
-                        <label for="fStrike">Strikes / Blocks</label>
-                    </div>
-
-                    <hr>
-                    <p class="small fw-bold text-muted mb-2">CITIZEN COMPLAINTS</p>
-
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="road" id="fRoad" checked>
-                        <span class="legend-icon-sm marker-road"><i class="bi bi-cone-striped"></i></span>
-                        <label for="fRoad">Road Issues</label>
-                    </div>
-
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="water" id="fWater" checked>
-                        <span class="legend-icon-sm marker-water"><i class="bi bi-droplet-fill"></i></span>
-                        <label for="fWater">Water Supply</label>
-                    </div>
-
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="electricity" id="fElec" checked>
-                        <span class="legend-icon-sm marker-electricity"><i class="bi bi-lightning-charge-fill"></i></span>
-                        <label for="fElec">Electricity</label>
-                    </div>
-
-                    <div class="legend-item">
-                        <input type="checkbox" class="form-check-input me-2" value="sanitation" id="fSani" checked>
-                        <span class="legend-icon-sm marker-sanitation"><i class="bi bi-trash-fill"></i></span>
-                        <label for="fSani">Sanitation</label>
-                    </div>
-                </div>
-
-                <button class="locate-btn" id="locateBtn"><i class="bi bi-crosshair"></i></button>
+                <label class="theme-slider" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider-pill"></span>
+                </label>
                 
-                <!-- Add Issue Button -->
-                <button class="btn btn-primary position-absolute" style="bottom: 30px; left: 30px; z-index: 1000;" id="addIssueBtn">
-                    <i class="bi bi-plus-circle me-2"></i>Report Issue
-                </button>
+                <select id="languageSelect" class="glass-input py-1 px-2" style="width: auto; height: 35px;">
+                    <option value="en">English</option>
+                    <option value="np">नेपाली</option>
+                </select>
+                <div class="user-info ps-3 border-start border-secondary">
+                    <div style="line-height: 1.3; text-align: right;">
+                        <div class="fw-bold" style="font-size: 0.95rem;" id="uNameTop">Loading...</div>
+                        <div id="uWard" style="font-size: 0.85rem; color: var(--text-muted);">Ward : --</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <h1 class="greeting-title mb-0" data-i18n="roadNav">Live Issue Map</h1>
+        </div>
+        
+        <div class="content-layout" style="grid-template-columns: 1fr 320px;">
+            
+            <div class="glass-box p-2">
+                <div class="map-wrapper">
+                    <div id="map"></div>
+                    
+                    <button class="btn btn-primary map-floating-btn" id="addIssueBtn">
+                        <i class="bi bi-plus-circle me-2"></i>Report Issue
+                    </button>
+                    <button class="map-floating-btn" id="locateBtn" title="Find My Location">
+                        <i class="bi bi-crosshair"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-box panel-block" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="panel-heading mb-0"><i class="bi bi-funnel-fill me-2"></i>Map Filters</h6>
+                    <button class="btn btn-sm btn-outline-light border-0" id="toggleFilters">
+                        <i class="bi bi-chevron-up" id="filterIcon"></i>
+                    </button>
+                </div>
+                
+                <div id="filterContent">
+                    <label class="filter-item">
+                        <input type="checkbox" value="broadcast" id="fBroad" checked>
+                        <div class="legend-icon-sm marker-broadcast"><i class="bi bi-broadcast"></i></div>
+                        <span class="small fw-semibold">Official Broadcasts</span>
+                    </label>
+                    <label class="filter-item mb-4">
+                        <input type="checkbox" value="strike" id="fStrike" checked>
+                        <div class="legend-icon-sm marker-strike"><i class="bi bi-exclamation-octagon"></i></div>
+                        <span class="small fw-semibold">Strikes / Blocks</span>
+                    </label>
+
+                    <div class="small fw-bold text-white mb-3" style="letter-spacing: 1px;">Citizen Complaints</div>
+
+                    <label class="filter-item">
+                        <input type="checkbox" value="road" id="fRoad" checked>
+                        <div class="legend-icon-sm marker-road"><i class="bi bi-cone-striped"></i></div>
+                        <span class="small">Road Issues</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" value="water" id="fWater" checked>
+                        <div class="legend-icon-sm marker-water"><i class="bi bi-droplet-fill"></i></div>
+                        <span class="small">Water Supply</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" value="electricity" id="fElec" checked>
+                        <div class="legend-icon-sm marker-electricity"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <span class="small">Electricity</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" value="sanitation" id="fSani" checked>
+                        <div class="legend-icon-sm marker-sanitation"><i class="bi bi-trash-fill"></i></div>
+                        <span class="small">Sanitation</span>
+                    </label>
+                    <label class="filter-item">
+                        <input type="checkbox" value="other" id="fOther" checked>
+                        <div class="legend-icon-sm marker-other"><i class="bi bi-question-circle"></i></div>
+                        <span class="small">Other Issues</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="modal fade glass-modal" id="issueModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Report New Issue</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="issueForm">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="glass-label">Title *</label>
+                                <input type="text" class="glass-input" id="complaintTitle" placeholder="Brief title" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="glass-label">Category *</label>
+                                <select class="glass-input" id="complaintCategory" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="Road Damage">Road Damage</option>
+                                    <option value="Water Supply">Water Supply</option>
+                                    <option value="Electricity">Electricity</option>
+                                    <option value="Sanitation">Sanitation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="glass-label">Description *</label>
+                            <textarea class="glass-input" id="complaintDescription" rows="3" placeholder="Describe the issue..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="glass-label">Location (GPS via Map) *</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="glass-input bg-dark" id="complaintLocation" placeholder="Click map or use GPS" readonly required>
+                                <button type="button" class="btn btn-outline-info text-nowrap" id="getLocationBtn"><i class="bi bi-crosshair me-1"></i> Get GPS</button>
+                            </div>
+                            <small class="text-info mt-1 d-block" id="locationCoords"></small>
+                            <input type="hidden" id="issueLat">
+                            <input type="hidden" id="issueLng">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="glass-label">Photos (Optional)</label>
+                            <input type="file" class="form-control bg-dark border-secondary text-white" id="complaintPhoto" multiple accept="image/*">
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-light w-50" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn-glass-primary w-50" id="submitIssueBtn">Submit Issue</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Issue Creation Modal -->
-    <div class="modal fade" id="issueModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade glass-modal" id="signOutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Report New Issue</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="issueForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Issue Type *</label>
-                                <select class="form-select" id="issueType" required>
-                                    <option value="">Select Type</option>
-                                    <option value="road">Road Issue</option>
-                                    <option value="water">Water Supply</option>
-                                    <option value="electricity">Electricity</option>
-                                    <option value="sanitation">Sanitation</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Priority</label>
-                                <select class="form-select" id="issuePriority">
-                                    <option value="low">Low</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Title *</label>
-                            <input type="text" class="form-control" id="issueTitle" required placeholder="Brief description of the issue">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Description *</label>
-                            <textarea class="form-control" id="issueDescription" rows="4" required placeholder="Detailed description of the issue"></textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Ward Number *</label>
-                                <input type="number" class="form-control" id="issueWard" min="1" max="35" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Location</label>
-                                <input type="text" class="form-control" id="issueLocation" placeholder="Click map to select location" readonly>
-                                <input type="hidden" id="issueLat">
-                                <input type="hidden" id="issueLng">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Attach Photo (Optional)</label>
-                            <input type="file" class="form-control" id="issuePhoto" accept="image/*">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="submitIssue">
-                        <i class="bi bi-send me-2"></i>Submit Issue
-                    </button>
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-box-arrow-right text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="mb-2 fw-bold">Sign Out</h5>
+                    <p class="text-muted small mb-4">Are you sure you want to sign out?</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-outline-light btn-sm w-50" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger btn-sm w-50" id="confirmSignOutBtn">Sign Out</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-        import { db } from "./firebase-config.js";
-        import { collection, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { db, auth } from "../../js/core/firebase-config.js";
+        import { collection, onSnapshot, query, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-        // 1. Initialize Map
-        const map = L.map('map').setView([27.7172, 85.3240], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-        // 2. Map Layers
-        const layers = {
-            broadcast: L.layerGroup().addTo(map),
-            strike: L.layerGroup().addTo(map),
-            road: L.layerGroup().addTo(map),
-            water: L.layerGroup().addTo(map),
-            electricity: L.layerGroup().addTo(map),
-            sanitation: L.layerGroup().addTo(map),
-            other: L.layerGroup().addTo(map)
-        };
-
-        const config = {
-            broadcast: { icon: 'bi-broadcast', bg: 'marker-broadcast' },
-            strike: { icon: 'bi-exclamation-octagon', bg: 'marker-strike' },
-            road: { icon: 'bi-cone-striped', bg: 'marker-road' },
-            water: { icon: 'bi-droplet-fill', bg: 'marker-water' },
-            electricity: { icon: 'bi-lightning-charge-fill', bg: 'marker-electricity' },
-            sanitation: { icon: 'bi-trash-fill', bg: 'marker-sanitation' },
-            other: { icon: 'bi-question-circle', bg: 'marker-other' }
-        };
-
-        // 3. Helper to create Markers
-        function addMarkerToMap(data, type, source) {
-            if (!data.lat || !data.lng) return;
-
-            const conf = config[type] || config.other;
-            const iconHTML = `<div class="legend-icon-sm ${conf.bg} shadow"><i class="bi ${conf.icon}"></i></div>`;
-            
-            const marker = L.marker([data.lat, data.lng], {
-                icon: L.divIcon({ className: '', html: iconHTML, iconSize: [32, 32] })
-            }).bindPopup(`
-                <div style="min-width:200px">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="badge bg-light text-dark border">${source.toUpperCase()}</span>
-                        ${data.status ? `<span class="badge bg-primary">${data.status}</span>` : ''}
-                    </div>
-                    <h6 class="fw-bold mb-1">${data.title}</h6>
-                    <p class="small text-muted mb-2">${data.description || data.content || ''}</p>
-                    <div class="small border-top pt-2">
-                        <i class="bi bi-geo-alt me-1"></i> Ward ${data.wardNumber || data.ward || '--'}
-                    </div>
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewIssueDetails('${data.id}')">
-                            <i class="bi bi-eye"></i> View Details
-                        </button>
-                    </div>
-                </div>
-            `);
-
-            marker.addTo(layers[type]);
-            
-            // Store marker data for search functionality
-            markers.push({
-                marker: marker,
-                data: data,
-                type: type,
-                source: source
-            });
-        }
-
-        // 4. Real-time Listeners
-        
-        // Listener A: Broadcasts
-        onSnapshot(query(collection(db, "broadcasts")), (snap) => {
-            layers.broadcast.clearLayers();
-            layers.strike.clearLayers();
-            snap.forEach(doc => {
-                const d = doc.data();
-                const type = d.isStrike ? 'strike' : 'broadcast';
-                addMarkerToMap(d, type, 'Official');
-            });
-        });
-
-        // Listener B: Complaints
-        onSnapshot(query(collection(db, "complaints")), (snap) => {
-            // Clear infrastructure layers before redraw
-            ['road', 'water', 'electricity', 'sanitation', 'other'].forEach(l => layers[l].clearLayers());
-            
-            snap.forEach(doc => {
-                const d = doc.data();
-                if (!d.lat || !d.lng) return;
-
-                // Map database category to our layer keys
-                let cat = (d.category || 'other').toLowerCase();
-                if (cat.includes('road')) cat = 'road';
-                else if (cat.includes('water')) cat = 'water';
-                else if (cat.includes('elec')) cat = 'electricity';
-                else if (cat.includes('sani')) cat = 'sanitation';
-                else cat = 'other';
-
-                addMarkerToMap(d, cat, 'Citizen');
-            });
-        });
-
-        // 5. Filter Logic
-        document.querySelectorAll('.form-check-input').forEach(box => {
-            box.onchange = (e) => {
-                const val = e.target.value;
-                if(e.target.checked) map.addLayer(layers[val]);
-                else map.removeLayer(layers[val]);
-            };
-        });
-
-        // 6. User Location
-        document.getElementById('locateBtn').onclick = () => map.locate({setView: true, maxZoom: 15});
-        map.on('locationfound', (e) => {
-            L.marker(e.latlng, {
-                icon: L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [25, 25] })
-            }).addTo(map).bindPopup("You are here");
-        });
-
-        // Logout
-        document.getElementById('logoutBtn').onclick = () => {
-            if(confirm("Sign out?")) window.location.href = "login.html";
-        };
-
-        // Global variables for search functionality
-        let markers = [];
-        let searchMarkers = [];
+        // Global variables for user state
         let currentUser = null;
-        let allIssues = [];
+        let userWard = "N/A";
+        let userMunicipality = "N/A";
 
-        // Initialize user data
-        function initializeUserData() {
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                currentUser = JSON.parse(userData);
-                document.getElementById('uNameTop').textContent = currentUser.name || 'User';
-                document.getElementById('uWard').textContent = `Ward ${currentUser.ward || '--'}`;
-            }
-        }
+        // Authentication Listener
+        onAuthStateChanged(auth, async (user) => {
+            console.log("Auth state changed:", user ? "User logged in" : "No user");
 
-        // Initialize app
-        initializeUserData();
-
-        // Issue Creation Modal
-        const issueModal = new bootstrap.Modal(document.getElementById('issueModal'));
-        let selectedLocation = null;
-        let tempLocationMarker = null;
-
-        // Open issue modal
-        document.getElementById('addIssueBtn').onclick = () => {
-            if (!currentUser) {
-                alert('Please log in to report issues');
+            if (!user) {
+                console.log("No user found, redirecting to login");
+                window.location.href = "../../login.html";
                 return;
             }
-            issueModal.show();
-        };
+            currentUser = user;
 
-        // Map click for location selection
-        map.on('click', function(e) {
-            if (document.getElementById('issueModal').classList.contains('show')) {
-                selectLocationOnMap(e.latlng);
+            // Get user data from Firestore
+            try {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    userWard = data.wardNumber || "N/A";
+                    userMunicipality = data.municipality || "N/A";
+
+                    // Update UI with user info
+                    document.getElementById("uNameTop").innerText = data.fullName || "User";
+                    document.getElementById("uWard").innerText = `Ward ${userWard}, ${userMunicipality}`;
+                }
+            } catch (error) {
+                console.error("Error loading user data:", error);
             }
+
+            initializeApp();
         });
 
-        // Select location on map
-        function selectLocationOnMap(latlng) {
-            selectedLocation = latlng;
-            
-            // Remove previous temp marker
-            if (tempLocationMarker) {
-                map.removeLayer(tempLocationMarker);
-            }
-            
-            // Add temp marker
-            tempLocationMarker = L.marker(latlng, {
-                icon: L.divIcon({ 
-                    className: '', 
-                    html: '<div class="user-marker"></div>', 
-                    iconSize: [25, 25] 
-                })
-            }).addTo(map).bindPopup('Selected location').openPopup();
-            
-            // Update form fields
-            document.getElementById('issueLat').value = latlng.lat;
-            document.getElementById('issueLng').value = latlng.lng;
-            document.getElementById('issueLocation').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-        }
+        // Logout functionality via Modal
+        document.getElementById("confirmSignOutBtn").addEventListener("click", () => {
+            signOut(auth).then(() => { window.location.href = "../../index.html"; });
+        });
 
-        // Submit issue
-        document.getElementById('submitIssue').onclick = async () => {
-            const form = document.getElementById('issueForm');
-            
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+        // Main app initialization
+        function initializeApp() {
+            let markers = [];
+            let searchMarkers = [];
+            let selectedLocation = null;
+            let tempLocationMarker = null;
+            let routingControl = null;
+            let userLocationMarker = null;
+            let allIssues = []; 
 
-            const issueData = {
-                title: document.getElementById('issueTitle').value,
-                description: document.getElementById('issueDescription').value,
-                category: document.getElementById('issueType').value,
-                priority: document.getElementById('issuePriority').value,
-                wardNumber: parseInt(document.getElementById('issueWard').value),
-                lat: selectedLocation ? selectedLocation.lat : 27.7172,
-                lng: selectedLocation ? selectedLocation.lng : 85.3240,
-                status: 'pending',
-                reportedBy: currentUser.uid,
-                reportedByName: currentUser.name,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
+            // 1. Initialize Map
+            const map = L.map('map').setView([27.7172, 85.3240], 13);
+            
+            // Dark map tiles fit the aesthetic better
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(map);
+
+            // 2. Map Layers
+            const layers = {
+                broadcast: L.layerGroup().addTo(map),
+                strike: L.layerGroup().addTo(map),
+                road: L.layerGroup().addTo(map),
+                water: L.layerGroup().addTo(map),
+                electricity: L.layerGroup().addTo(map),
+                sanitation: L.layerGroup().addTo(map),
+                other: L.layerGroup().addTo(map)
             };
 
-            try {
-                const docRef = await addDoc(collection(db, "complaints"), issueData);
-                
-                // Show success message
-                alert('Issue reported successfully! ID: ' + docRef.id);
-                
-                // Reset form and close modal
-                form.reset();
-                if (tempLocationMarker) {
-                    map.removeLayer(tempLocationMarker);
-                    tempLocationMarker = null;
+            const config = {
+                broadcast: { icon: 'bi-broadcast', bg: 'marker-broadcast' },
+                strike: { icon: 'bi-exclamation-octagon', bg: 'marker-strike' },
+                road: { icon: 'bi-cone-striped', bg: 'marker-road' },
+                water: { icon: 'bi-droplet-fill', bg: 'marker-water' },
+                electricity: { icon: 'bi-lightning-charge-fill', bg: 'marker-electricity' },
+                sanitation: { icon: 'bi-trash-fill', bg: 'marker-sanitation' },
+                other: { icon: 'bi-question-circle', bg: 'marker-other' }
+            };
+
+            // 3. Helper to create Markers
+            function addMarkerToMap(data, type, source) {
+                if (!data.lat || !data.lng) return;
+
+                const conf = config[type] || config.other;
+                const iconHTML = `<div class="legend-icon-sm ${conf.bg} shadow"><i class="bi ${conf.icon}"></i></div>`;
+
+                const marker = L.marker([data.lat, data.lng], {
+                    icon: L.divIcon({ className: '', html: iconHTML, iconSize: [32, 32] })
+                }).bindPopup(`
+                    <div style="min-width:200px">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-light text-dark border">${source.toUpperCase()}</span>
+                            ${data.status ? `<span class="badge bg-primary">${data.status}</span>` : ''}
+                        </div>
+                        <h6 class="fw-bold mb-1">${data.title}</h6>
+                        <p class="small text-muted mb-2">${data.description || data.content || ''}</p>
+                        <div class="small border-top border-secondary pt-2">
+                            <i class="bi bi-geo-alt me-1"></i> Ward ${data.wardNumber || data.ward || '--'}
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-info" onclick="getDirections(${data.lat}, ${data.lng})">
+                                <i class="bi bi-route"></i> Directions
+                            </button>
+                        </div>
+                    </div>
+                `);
+
+                marker.addTo(layers[type]);
+
+                if (source === 'Citizen') {
+                    allIssues.push({
+                        id: data.id, title: data.title, description: data.description || '',
+                        category: data.category || type, lat: data.lat, lng: data.lng,
+                        status: data.status || 'Submitted', wardNumber: data.wardNumber || '--'
+                    });
                 }
-                selectedLocation = null;
-                issueModal.hide();
-                
-            } catch (error) {
-                console.error('Error submitting issue:', error);
-                alert('Failed to submit issue. Please try again.');
             }
-        };
 
-        // View issue details
-        window.viewIssueDetails = function(issueId) {
-            // Store issue ID and redirect to details page or show modal
-            localStorage.setItem('selectedIssueId', issueId);
-            // For now, show alert
-            alert(`Viewing details for issue: ${issueId}\\n(Full details page to be implemented)`);
-        };
+            // 4. Real-time Listeners
+            onSnapshot(query(collection(db, "broadcasts")), (snap) => {
+                layers.broadcast.clearLayers(); layers.strike.clearLayers();
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const type = d.isStrike ? 'strike' : 'broadcast';
+                    addMarkerToMap(d, type, 'Official');
+                });
+            });
 
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
-            const searchTerm = e.target.value.trim();
-            
-            if (searchTerm.length < 2) {
-                clearSearchMarkers();
-                showAllMarkers();
-                return;
-            }
-            
-            // Search both places and existing issues
-            searchPlaces(searchTerm);
-            searchExistingIssues(searchTerm);
-        }, 300));
+            onSnapshot(query(collection(db, "complaints")), (snap) => {
+                ['road', 'water', 'electricity', 'sanitation', 'other'].forEach(l => layers[l].clearLayers());
+                allIssues = [];
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if (!d.lat || !d.lng) return;
+                    let cat = (d.category || 'other').toLowerCase();
+                    if (cat.includes('road')) cat = 'road';
+                    else if (cat.includes('water')) cat = 'water';
+                    else if (cat.includes('electricity')) cat = 'electricity';
+                    else if (cat.includes('sanitation') || cat.includes('waste')) cat = 'sanitation';
+                    else cat = 'other';
+                    addMarkerToMap(d, cat, 'Citizen');
+                });
+            });
 
-        // Search existing issues
-        function searchExistingIssues(searchTerm) {
-            markers.forEach(item => {
-                const issue = item.data;
-                const match = issue.title.toLowerCase().includes(searchTerm) ||
-                              (issue.description && issue.description.toLowerCase().includes(searchTerm)) ||
-                              (issue.content && issue.content.toLowerCase().includes(searchTerm)) ||
-                              (issue.ward && issue.ward.toString().includes(searchTerm)) ||
-                              item.type.toLowerCase().includes(searchTerm) ||
-                              item.source.toLowerCase().includes(searchTerm);
+            // 5. UI Controls
+            document.getElementById('locateBtn').addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        if (userLocationMarker) map.removeLayer(userLocationMarker);
+                        userLocationMarker = L.marker([latitude, longitude], {
+                            icon: L.divIcon({ className: 'user-marker', iconSize: [25, 25] })
+                        }).addTo(map).bindPopup('You are here').openPopup();
+                        map.setView([latitude, longitude], 16);
+                    });
+                }
+            });
 
-                if (match) {
-                    map.addLayer(item.marker);
+            document.getElementById('toggleFilters').addEventListener('click', () => {
+                const filterContent = document.getElementById('filterContent');
+                const filterIcon = document.getElementById('filterIcon');
+                if (filterContent.style.display === 'none') {
+                    filterContent.style.display = 'block';
+                    filterIcon.className = 'bi bi-chevron-up';
                 } else {
-                    map.removeLayer(item.marker);
+                    filterContent.style.display = 'none';
+                    filterIcon.className = 'bi bi-chevron-down';
                 }
             });
-        }
 
-        // Show all markers based on filter state
-        function showAllMarkers() {
-            markers.forEach(item => {
-                const filterId = `f${item.type.charAt(0).toUpperCase() + item.type.slice(1)}`;
-                const filterCheckbox = document.getElementById(filterId);
-                if (filterCheckbox && filterCheckbox.checked) {
-                    map.addLayer(item.marker);
-                }
-            });
-        }
-
-        // Debounce function to limit API calls
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Search places using Nominatim API
-        async function searchPlaces(query) {
-            try {
-                clearSearchMarkers();
-                
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`, {
-                    headers: {
-                        'User-Agent': 'CivicSewa/1.0 (https://civicsewa.example.com; civicsewa@example.com)'
-                    }
+            // 6. Filter Controls
+            const filterCheckboxes = document.querySelectorAll('.filter-item input[type="checkbox"]');
+            filterCheckboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const type = cb.value;
+                    if (cb.checked) map.addLayer(layers[type]);
+                    else map.removeLayer(layers[type]);
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            });
+
+            // 7. Issue Creation
+            const issueModal = new bootstrap.Modal(document.getElementById('issueModal'));
+            document.getElementById('addIssueBtn').addEventListener('click', () => {
+                if (!currentUser) return alert('Please log in to create an issue.');
+                issueModal.show();
+            });
+
+            // Map click for location selection
+            map.on('click', function(e) {
+                if (document.getElementById('issueModal').classList.contains('show')) {
+                    selectLocationOnMap(e.latlng);
+                } else {
+                    // Quick add feature: click map when modal closed to instantly open it
+                    selectLocationOnMap(e.latlng);
+                    issueModal.show();
                 }
+            });
+
+            function selectLocationOnMap(latlng) {
+                if (window.tempMarker) map.removeLayer(window.tempMarker);
+                selectedLocation = { lat: latlng.lat, lng: latlng.lng };
+                window.tempMarker = L.marker([latlng.lat, latlng.lng]).addTo(map).bindPopup('Selected location').openPopup();
+                document.getElementById('complaintLocation').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+                document.getElementById('locationCoords').textContent = `Selected: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+                document.getElementById('issueLat').value = latlng.lat;
+                document.getElementById('issueLng').value = latlng.lng;
+            }
+
+            document.getElementById('getLocationBtn').addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        selectLocationOnMap({lat: latitude, lng: longitude});
+                        map.setView([latitude, longitude], 16);
+                    });
+                }
+            });
+
+            // Form submission
+            document.getElementById('submitIssueBtn').addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!selectedLocation) return alert('Please select a location on the map first.');
                 
-                const results = await response.json();
-                
-                results.forEach(place => {
-                    const lat = parseFloat(place.lat);
-                    const lng = parseFloat(place.lon);
+                const title = document.getElementById('complaintTitle').value.trim();
+                const description = document.getElementById('complaintDescription').value.trim();
+                const category = document.getElementById('complaintCategory').value;
+
+                if (!title || !description || !category) return alert('Please fill all required fields.');
+
+                try {
+                    document.getElementById('submitIssueBtn').innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
                     
-                    if (lat && lng) {
-                        const marker = L.marker([lat, lng], {
-                            icon: L.divIcon({ 
-                                className: '', 
-                                html: '<div class="legend-icon-sm marker-other shadow"><i class="bi bi-search"></i></div>', 
-                                iconSize: [32, 32] 
-                            })
-                        }).bindPopup(`
-                            <div style="min-width:200px">
-                                <h6 class="fw-bold mb-1">${place.display_name.split(',')[0]}</h6>
-                                <p class="small text-muted mb-2">${place.display_name}</p>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-primary" onclick="flyToLocation(${lat}, ${lng})">
-                                        <i class="bi bi-geo-alt"></i> Go Here
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="addIssueAtLocation(${lat}, ${lng})">
-                                        <i class="bi bi-plus-circle"></i> Add Issue
-                                    </button>
-                                </div>
-                            </div>
-                        `);
-                        
-                        marker.addTo(map);
-                        searchMarkers.push(marker);
-                    }
-                });
-                
-                // If results found, adjust map to show all search results
-                if (searchMarkers.length > 0) {
-                    const group = new L.featureGroup(searchMarkers);
-                    map.fitBounds(group.getBounds().pad(0.1));
+                    const issueData = {
+                        title: title, description: description, category: category,
+                        location: `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`,
+                        lat: selectedLocation.lat, lng: selectedLocation.lng,
+                        wardNumber: userWard, municipality: userMunicipality,
+                        userId: currentUser.uid, status: 'Submitted', createdAt: serverTimestamp()
+                    };
+
+                    await addDoc(collection(db, 'complaints'), issueData);
+                    alert('Issue reported successfully!');
+                    
+                    issueModal.hide();
+                    document.getElementById('issueForm').reset();
+                    document.getElementById('submitIssueBtn').innerHTML = 'Submit Issue';
+                    if (window.tempMarker) map.removeLayer(window.tempMarker);
+                } catch (error) {
+                    console.error(error);
+                    alert('Failed to create issue.');
+                    document.getElementById('submitIssueBtn').innerHTML = 'Submit Issue';
                 }
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                
-                // Fallback: Show a simple message to the user
-                const searchInput = document.getElementById('searchInput');
-                const existingError = document.getElementById('search-error');
-                if (existingError) existingError.remove();
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.id = 'search-error';
-                errorDiv.className = 'position-absolute top-100 start-50 translate-middle-x mt-2 p-2 bg-danger text-white rounded small';
-                errorDiv.style.zIndex = '1001';
-                errorDiv.style.width = '300px';
-                errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Search temporarily unavailable. Please try again.';
-                searchInput.parentElement.appendChild(errorDiv);
-                
-                // Remove error message after 3 seconds
-                setTimeout(() => {
-                    if (errorDiv.parentNode) {
-                        errorDiv.remove();
-                    }
-                }, 3000);
-            }
-        }
-
-        // Clear search markers
-        function clearSearchMarkers() {
-            searchMarkers.forEach(marker => map.removeLayer(marker));
-            searchMarkers = [];
-        }
-
-        // Fly to specific location
-        window.flyToLocation = function(lat, lng) {
-            map.flyTo([lat, lng], 16, {
-                duration: 2
             });
-        }
 
-        // Add issue at specific location
-        window.addIssueAtLocation = function(lat, lng) {
-            // Store the location for use in issue creation
-            selectedLocation = { lat, lng };
-            
-            // Open the issue modal
-            issueModal.show();
-            
-            // Pre-fill location in form
-            setTimeout(() => {
-                selectLocationOnMap(selectedLocation);
-            }, 500);
-        }
+            // Enhanced Search functionality
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            let searchTimeout;
 
-        // Clear search when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.map-search')) {
-                setTimeout(() => {
-                    if (document.getElementById('searchInput').value.trim() === '') {
-                        clearSearchMarkers();
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                if (query.length < 2) { searchResults.style.display = 'none'; return; }
+                searchTimeout = setTimeout(() => { performEnhancedSearch(query); }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) searchResults.style.display = 'none';
+            });
+
+            async function performEnhancedSearch(query) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+                    const places = await response.json();
+                    
+                    if (places.length === 0) {
+                        searchResults.innerHTML = '<div class="search-result-item">No locations found</div>';
+                    } else {
+                        searchResults.innerHTML = places.map(place => `
+                            <div class="search-result-item" onclick="selectSearchResult(${place.lat}, ${place.lon}, 'location')">
+                                <div class="search-result-title">${place.display_name.split(',')[0]} <span class="type-location">LOCATION</span></div>
+                                <div class="search-result-desc">${place.display_name}</div>
+                            </div>
+                        `).join('');
                     }
-                }, 200);
+                    searchResults.style.display = 'block';
+                } catch (error) {
+                    console.error(error);
+                }
             }
-        });
 
+            window.selectSearchResult = function(lat, lng) {
+                searchResults.style.display = 'none';
+                searchInput.value = '';
+                L.marker([lat, lng]).addTo(map).bindPopup('Searched Location').openPopup();
+                map.flyTo([lat, lng], 16);
+            };
 
-        // ================= LANGUAGE SELECTOR =================
-        const langSelect = document.getElementById("languageSelect");
-        if (langSelect) {
-        const stored = localStorage.getItem("lang") || "en";
-        langSelect.value = stored;
-        updateLanguage(stored);
-        langSelect.addEventListener("change", async () => {
-            localStorage.setItem("lang", langSelect.value);
-            await updateLanguage(langSelect.value);
-        });
-}
+            window.getDirections = function(destLat, destLng) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        createRoute(pos.coords.latitude, pos.coords.longitude, destLat, destLng);
+                    }, () => { createRoute(map.getCenter().lat, map.getCenter().lng, destLat, destLng); });
+                }
+            };
 
-        // ================= LANGUAGE TRANSLATIONS =================
-        const translations = {
-            en: {
-                dashboardNav: "Dashboard",
-                myComplaintsNav: "My Complaints",
-                documentsNav: "Documents",
-                broadcastNav: "Broadcast Channel",
-                roadNav: "Road",
-                chatbotNav: "Guidance Chatbot",
-                settingsNav: "Settings",
-                signOut: "Sign Out"
-            },
-            np: {
-                dashboardNav: "ड्यासबोर्ड",
-                myComplaintsNav: "मेरी गुनासोहरू",
-                documentsNav: "कागजातहरू",
-                broadcastNav: "प्रसारण च्यानल",
-                roadNav: "सडक",
-                chatbotNav: "मार्गदर्शन च्याटबट",
-                settingsNav: "सेटिङहरू",
-                signOut: "साइन आउट"
+            function createRoute(startLat, startLng, destLat, destLng) {
+                if (routingControl) map.removeControl(routingControl);
+                if (userLocationMarker) map.removeLayer(userLocationMarker);
+                
+                userLocationMarker = L.marker([startLat, startLng], {
+                    icon: L.divIcon({ className: 'user-marker', iconSize: [25, 25] })
+                }).addTo(map);
+
+                routingControl = L.Routing.control({
+                    waypoints: [ L.latLng(startLat, startLng), L.latLng(destLat, destLng) ],
+                    routeWhileDragging: false, addWaypoints: false,
+                    createMarker: function() { return null; },
+                    lineOptions: { styles: [{ color: '#0dcaf0', weight: 5, opacity: 0.8 }] }
+                }).addTo(map);
             }
-        };
-
-        // ================= UPDATE LANGUAGE =================
-        async function updateLanguage(lang) {
-        // 1. Static [data-i18n] labels
-        const data = translations[lang] || translations.en;
-        document.querySelectorAll("[data-i18n]").forEach((el) => {
-            const key = el.getAttribute("data-i18n");
-            if (!key || data[key] === undefined) return;
-            if (el.tagName === "INPUT") el.placeholder = data[key];
-            else el.innerText = data[key];
-        });
-    }  
+        }
     </script>
 </body>
 </html>
