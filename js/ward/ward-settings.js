@@ -1,112 +1,144 @@
-import { auth, db } from "./firebase-config.js";
+import { auth, db } from "../core/firebase-config.js";
 import {
   onAuthStateChanged,
   signOut,
-  updatePassword,
+  sendPasswordResetEmail,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   doc,
   getDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-let currentUser = null;
+let currentUserId = null;
+let currentUserEmail = null;
 
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.innerText = value != null && value !== "" ? value : "—";
-}
-
+// ================= AUTH & LOAD PROFILE =================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "../../login.html";
     return;
   }
-  currentUser = user;
 
-  setText("uNameTop", user.displayName || user.email || "User");
-  setText("settingsEmail", user.email);
-  setText("settingsFullName", user.displayName);
+  currentUserId = user.uid;
+  currentUserEmail = user.email;
 
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
       const data = snap.data();
-      setText("uNameTop", data.fullName || user.displayName || user.email);
-      setText(
-        "uWard",
-        `Ward ${data.wardNumber || "--"}, ${data.municipality || ""}`,
-      );
-      setText("settingsFullName", data.fullName);
-      setText("settingsEmail", user.email);
-      setText("settingsPhone", data.phone);
-      setText("settingsWard", data.wardNumber);
-      setText("settingsMunicipality", data.municipality);
-    } else {
-      setText("uWard", "—");
-      setText("settingsPhone", "—");
-      setText("settingsWard", "—");
-      setText("settingsMunicipality", "—");
+
+      // Populate Top Nav
+      if (document.getElementById("uWard"))
+        document.getElementById("uWard").innerText =
+          `Ward ${data.wardNumber || "--"}`;
+      if (document.getElementById("uNameTop"))
+        document.getElementById("uNameTop").innerText =
+          data.fullName || "Official";
+
+      // Populate Settings Form
+      document.getElementById("profileName").value = data.fullName || "";
+      document.getElementById("profileEmail").value = user.email || "";
+      document.getElementById("profilePhone").value = data.phoneNumber || "";
+      document.getElementById("profileWard").value = data.wardNumber || "N/A";
+      document.getElementById("profileMuni").value = data.municipality || "N/A";
     }
-  } catch (err) {
-    console.error("Error loading profile:", err);
-    setText("uWard", "—");
-    setText("settingsPhone", "—");
-    setText("settingsWard", "—");
-    setText("settingsMunicipality", "—");
+  } catch (error) {
+    console.error("Error loading profile:", error);
   }
 });
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  signOut(auth).then(() => (window.location.href = "login.html"));
-});
-
-document.getElementById("saveNotifBtn").addEventListener("click", () => {
-  const prefs = {
-    complaints: document.getElementById("notifComplaints").checked,
-    broadcast: document.getElementById("notifBroadcast").checked,
-    emergency: document.getElementById("notifEmergency").checked,
-    email: document.getElementById("notifEmail").checked,
-  };
-  localStorage.setItem("civicsewa_notif_prefs", JSON.stringify(prefs));
-  alert("Notification preferences saved.");
-});
-
+// ================= UPDATE PROFILE =================
 document
-  .getElementById("changePasswordBtn")
-  .addEventListener("click", async () => {
-    const newPwd = document.getElementById("newPassword").value;
-    const confirm = document.getElementById("confirmPassword").value;
-    if (!newPwd || newPwd.length < 6) {
-      alert("Password must be at least 6 characters.");
+  .getElementById("profileForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent page reload
+
+    if (!currentUserId) return;
+
+    const btn = document.getElementById("saveProfileBtn");
+    const newName = document.getElementById("profileName").value.trim();
+    const newPhone = document.getElementById("profilePhone").value.trim();
+
+    if (!newName) {
+      alert("Name cannot be empty.");
       return;
     }
-    if (newPwd !== confirm) {
-      alert("Passwords do not match.");
-      return;
-    }
-    if (!currentUser) return;
+
+    btn.disabled = true;
+    btn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
     try {
-      await updatePassword(currentUser, newPwd);
-      document.getElementById("newPassword").value = "";
-      document.getElementById("confirmPassword").value = "";
-      alert("Password updated.");
-    } catch (e) {
-      console.error(e);
-      alert("Could not update password. You may need to re-login first.");
+      await updateDoc(doc(db, "users", currentUserId), {
+        fullName: newName,
+        phoneNumber: newPhone,
+      });
+
+      // Update top nav instantly
+      document.getElementById("uNameTop").innerText = newName;
+
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Check console.");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Save Changes";
     }
   });
 
-// Load saved notification preferences
-const savedNotif = localStorage.getItem("civicsewa_notif_prefs");
-if (savedNotif) {
-  try {
-    const prefs = JSON.parse(savedNotif);
-    document.getElementById("notifComplaints").checked =
-      prefs.complaints !== false;
-    document.getElementById("notifBroadcast").checked =
-      prefs.broadcast !== false;
-    document.getElementById("notifEmergency").checked =
-      prefs.emergency === true;
-    document.getElementById("notifEmail").checked = prefs.email !== false;
-  } catch (_) {}
+// ================= RESET PASSWORD =================
+document
+  .getElementById("resetPasswordBtn")
+  ?.addEventListener("click", async () => {
+    if (!currentUserEmail) {
+      alert("No email associated with this account.");
+      return;
+    }
+
+    const btn = document.getElementById("resetPasswordBtn");
+
+    if (confirm(`Send a password reset email to ${currentUserEmail}?`)) {
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+      try {
+        await sendPasswordResetEmail(auth, currentUserEmail);
+        alert("Password reset email sent! Please check your inbox.");
+      } catch (error) {
+        console.error("Error sending reset email:", error);
+        alert("Failed to send reset email. " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML =
+          '<i class="bi bi-key me-2"></i>Send Password Reset Email';
+      }
+    }
+  });
+
+// ================= LANGUAGE & SOUND TOGGLE =================
+const langSelect = document.getElementById("languageSelect");
+if (langSelect) {
+  langSelect.value = localStorage.getItem("lang") || "en";
+  langSelect.addEventListener("change", () => {
+    localStorage.setItem("lang", langSelect.value);
+    // Refresh to apply lang changes if you add translations here later
+    location.reload();
+  });
 }
+
+// Visual only - You can wire this up to an actual notification sound function later!
+document.getElementById("soundToggle")?.addEventListener("change", (e) => {
+  if (e.target.checked) {
+    console.log("Notification sounds enabled.");
+  } else {
+    console.log("Notification sounds muted.");
+  }
+});
+
+// ================= LOGOUT =================
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  signOut(auth).then(() => (window.location.href = "../../index.html"));
+});

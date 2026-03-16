@@ -2,94 +2,191 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CivicSewa - Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicSewa - Ward Settings</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="Color_mode.css">
-
-    <style>
-        body { background-color: #f0f2f5; }
-        #sidebar { width: 260px; min-height: 100vh; background: #2A4B79; color: white; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 4px 15px; }
-        .nav-link.active { background: rgba(255,255,255,0.2); color: white; }
-        .card { border: none; border-radius: 12px; transition: 0.3s; }
-        .card:hover { transform: translateY(-2px); }
-        .gradient-custom-2 {
-            background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
-        }
-        .form-control:focus, .form-select:focus { border-color: #2A4B79; box-shadow: 0 0 0 0.2rem rgba(42, 75, 121, 0.25); }
-        .btn-primary { background-color: #2A4B79; border-color: #2A4B79; }
-        .btn-primary:hover { background-color: #1e3a5f; border-color: #1e3a5f; }
-    </style>
+    
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/ward.css">
 </head>
 <body>
-<div class="d-flex">
-    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
-        <h3 class="p-3 fw-bold">CivicSewa</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-            <li><a href="ward-dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="ward-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> Ward Complaints</a></li>
-            <li><a href="ward-broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
-            <li><a href="ward-settings.html" class="nav-link active"><i class="bi bi-gear me-2"></i> Settings</a></li>
-        </ul>
-        <hr>
-        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
-    </div>
 
-    <div class="flex-grow-1 d-flex flex-column" style="background-color:#2A4B79; color: white; min-height: 100vh; margin-left: 260px;">
-        <nav class="navbar navbar-expand shadow-sm p-3">
-            <div class="container-fluid">
-                <input type="text" class="form-control w-25" placeholder="Search...">
-                <div class="ms-auto d-flex align-items-center">
-                    <span class="badge bg-primary me-3" id="uWard">Ward --</span>
-                    <strong id="uNameTop">User Name</strong>
-                </div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-wrap">
+                <i class="bi bi-buildings-fill"></i> 
+                <span class="nav-text">CivicSewa <span class="text-warning ms-1" style="font-size: 0.7rem;">ADMIN</span></span>
             </div>
-        </nav>
-
-        <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
-            <h2 class="mb-4">Settings</h2>
-
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card p-4 shadow-sm">
-                        <h5 class="mb-3"><i class="bi bi-person me-2"></i>Profile</h5>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Full Name</label>
-                            <p class="mb-0 fw-medium" id="settingsFullName">—</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Email</label>
-                            <p class="mb-0 fw-medium" id="settingsEmail">—</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Ward Number</label>
-                            <p class="mb-0 fw-medium" id="settingsWard">—</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Municipality</label>
-                            <p class="mb-0 fw-medium" id="settingsMunicipality">—</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card p-4 shadow-sm mt-4">
-                        <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Account & Privacy</h5>
-                        <div class="mb-3">
-                            <label class="form-label">Change Password</label>
-                            <input type="password" class="form-control mb-2" id="newPassword" placeholder="New password">
-                            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password">
-                        </div>
-                        <button type="button" class="btn btn-outline-primary" id="changePasswordBtn">Update Password</button>
-                    </div>
-                </div>
-            </div>
+            <i class="bi bi-list fs-3 text-secondary" id="sidebarToggle" style="cursor: pointer;"></i>
         </div>
-    </div>
-</div>
+        
+        <a href="ward-dashboard.html" class="nav-link"><i class="bi bi-grid-1x2"></i> <span class="nav-text">Control Panel</span></a>
+        <a href="ward-complaints.html" class="nav-link"><i class="bi bi-inboxes"></i> <span class="nav-text">Ward Complaints</span></a>
+        <a href="ward-broadcast.html" class="nav-link"><i class="bi bi-broadcast"></i> <span class="nav-text">Broadcast Log</span></a>
+        <a href="ward-road.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Ward Road</a>
+        <a href="ward-settings.html" class="nav-link active"><i class="bi bi-gear"></i> <span class="nav-text">Settings</span></a>
+        
+        <button id="logoutBtn" class="sign-out-btn w-100 border-0 mt-auto">
+            <i class="bi bi-box-arrow-right"></i> <span class="nav-text">Sign Out</span>
+        </button>
+    </nav>
 
+    <main class="main-wrapper">
+        
+        <header class="top-nav">
+            <div class="search-container" style="visibility: hidden;">
+                <i class="bi bi-search text-secondary"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            
+            <div class="profile-section">
+                <label class="theme-slider" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider-pill"></span>
+                </label>
+                
+                <select id="languageSelect" class="form-select border-secondary text-light" style="background: rgba(0,0,0,0.4); width: auto;">
+                    <option value="en" style="background: #110d20;">English</option>
+                    <option value="np" style="background: #110d20;">नेपाली</option>
+                </select>
 
-<script type="module" src="ward-settings.js"></script>
+                <div class="user-info ps-3 border-start border-secondary">
+                    <div style="line-height: 1.3;">
+                        <div class="fw-bold text-end" style="font-size: 0.95rem;"><span id="uNameTop">Loading...</span></div>
+                        <div class="text-warning text-end" style="font-size: 0.85rem;" id="uWard">Ward --</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="mb-4">
+            <h1 class="greeting-title mb-1">System Settings</h1>
+            <p class="text-muted small">Manage your official profile and security preferences.</p>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-7">
+                <div class="glass-box p-4 h-100">
+                    <h5 class="fw-bold text-warning mb-4"><i class="bi bi-person-badge me-2"></i>Official Profile</h5>
+                    
+                    <form id="profileForm">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label small">Full Name / Official Title</label>
+                                <input type="text" id="profileName" class="form-control admin-input" placeholder="e.g. Ward Chairman Sharma">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label small">Email Address (Read Only)</label>
+                                <input type="email" id="profileEmail" class="form-control admin-input" readonly disabled>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small">Contact Phone</label>
+                                <input type="tel" id="profilePhone" class="form-control admin-input" placeholder="Enter phone number">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small">Assigned Ward (Read Only)</label>
+                                <input type="text" id="profileWard" class="form-control admin-input" readonly disabled>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small">Municipality (Read Only)</label>
+                                <input type="text" id="profileMuni" class="form-control admin-input" readonly disabled>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-end">
+                            <button type="submit" class="btn btn-warning fw-bold px-4" id="saveProfileBtn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="row g-4">
+                    
+                    <div class="col-12">
+                        <div class="glass-box p-4">
+                            <h5 class="fw-bold text-danger mb-3"><i class="bi bi-shield-lock me-2"></i>Security</h5>
+                            <p class="small text-light mb-3">Ensure your account is secure. If you suspect unauthorized access, reset your password immediately.</p>
+                            <button id="resetPasswordBtn" class="btn btn-outline-danger w-100"><i class="bi bi-key me-2"></i>Send Password Reset Email</button>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="glass-box p-4">
+                            <h5 class="fw-bold text-info mb-3"><i class="bi bi-laptop me-2"></i>System Preferences</h5>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <div class="text-light fw-bold small">Interface Theme</div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">Switch between Obsidian and Light mode.</div>
+                                </div>
+                                <label class="theme-slider m-0" title="Toggle Light/Dark Mode">
+                                    <input type="checkbox" id="themeToggleSecondary">
+                                    <span class="slider-pill"></span>
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+                                <div>
+                                    <div class="text-light fw-bold small">Notification Sounds</div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">Alerts for new emergencies.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="soundToggle" checked style="background-color: transparent; border-color: rgba(255,255,255,0.3);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            document.getElementById('sidebar').addEventListener('click', (e) => {
+                const isToggle = e.target.closest('#sidebarToggle');
+                const isLogo = e.target.closest('.logo-wrap');
+                if (isToggle) { body.classList.add('sidebar-collapsed'); } 
+                else if (isLogo && body.classList.contains('sidebar-collapsed')) { body.classList.remove('sidebar-collapsed'); }
+            });
+
+            // Sync both Theme Toggles
+            const t1 = document.getElementById('themeToggle');
+            const t2 = document.getElementById('themeToggleSecondary');
+            
+            if (localStorage.getItem('civicsewa_theme') === 'light') { 
+                body.classList.add('light-theme'); 
+                if (t1) t1.checked = true; 
+                if (t2) t2.checked = true; 
+            }
+            
+            function switchTheme(isChecked) {
+                if (isChecked) { body.classList.add('light-theme'); localStorage.setItem('civicsewa_theme', 'light'); } 
+                else { body.classList.remove('light-theme'); localStorage.setItem('civicsewa_theme', 'dark'); }
+                if (t1) t1.checked = isChecked;
+                if (t2) t2.checked = isChecked;
+            }
+
+            if (t1) t1.addEventListener('change', (e) => switchTheme(e.target.checked));
+            if (t2) t2.addEventListener('change', (e) => switchTheme(e.target.checked));
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="../../js/ward/ward-settings.js"></script>
 </body>
 </html>

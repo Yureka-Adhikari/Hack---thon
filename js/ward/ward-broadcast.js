@@ -1,178 +1,295 @@
-import { db, auth } from "./firebase-config.js";
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { auth, db } from "../core/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   collection,
   addDoc,
   deleteDoc,
   doc,
+  getDoc,
   query,
   orderBy,
   onSnapshot,
   serverTimestamp,
-  getDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { translateBroadcast } from "./translator.js";
 
-let cachedBroadcasts = [];
-let currentUserWard = "N/A";
+let currentUser = null;
+let userWard = "N/A";
+let userMunicipality = "N/A";
 
-// 1. AUTH & USER INFO
+// ================= AUTH =================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "../citizen/login.html";
     return;
   }
+  currentUser = user;
+
   const snap = await getDoc(doc(db, "users", user.uid));
   if (snap.exists()) {
     const data = snap.data();
-    currentUserWard = data.wardNumber || "N/A";
-    if (document.getElementById("uWard"))
-      document.getElementById("uWard").innerText = `Ward ${currentUserWard}`;
-    if (document.getElementById("uNameTop"))
-      document.getElementById("uNameTop").innerText = data.fullName || "User";
+    if (data.role !== "ward") {
+      alert("Access denied. Ward officials only.");
+      window.location.href = "../citizen/login.html";
+      return;
+    }
+    userWard = data.wardNumber || "N/A";
+    userMunicipality = data.municipality || "N/A";
+    const nameEl = document.getElementById("uNameTop");
+    const wardEl = document.getElementById("uWard");
+    if (nameEl) nameEl.innerText = data.fullName || "Official";
+    if (wardEl) wardEl.innerText = `Ward ${userWard}, ${userMunicipality}`;
   }
-  initListener();
+
+  initBroadcastLog();
 });
 
-// 2. REAL-TIME LISTENER
-function initListener() {
-  const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => {
-    cachedBroadcasts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderBroadcasts();
-  });
+// ================= MAP PICKER =================
+let modalMap = null;
+let selectionMarker = null;
+let pickedLat = null;
+let pickedLng = null;
+
+function initMap() {
+  if (modalMap) {
+    modalMap.invalidateSize();
+    return;
+  }
+
+  modalMap = L.map("modalMap").setView([27.7172, 85.324], 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors",
+  }).addTo(modalMap);
+
+  // Click to place pin
+  modalMap.on("click", (e) => placePin(e.latlng.lat, e.latlng.lng));
 }
 
-// 3. RENDER LOGIC (Fixed Category & Translation)
-async function renderBroadcasts() {
+function placePin(lat, lng) {
+  if (selectionMarker) selectionMarker.setLatLng([lat, lng]);
+  else selectionMarker = L.marker([lat, lng]).addTo(modalMap);
+  pickedLat = lat;
+  pickedLng = lng;
+  document.getElementById("latInput").value = lat.toFixed(6);
+  document.getElementById("lngInput").value = lng.toFixed(6);
+  document.getElementById("locationCoords").textContent =
+    `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+  // Reverse geocode to suggest a name
+  fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+  )
+    .then((r) => r.json())
+    .then((data) => {
+      const addr = data.display_name?.split(",").slice(0, 3).join(", ") || "";
+      const nameInput = document.getElementById("locationNameInput");
+      if (nameInput && addr) nameInput.value = addr;
+    })
+    .catch(() => {});
+}
+
+// GPS button inside modal
+document.getElementById("getLocationBtn")?.addEventListener("click", () => {
+  const btn = document.getElementById("getLocationBtn");
+  if (!navigator.geolocation) {
+    alert("GPS not supported.");
+    return;
+  }
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      if (!modalMap) initMap();
+      modalMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+      placePin(pos.coords.latitude, pos.coords.longitude);
+      btn.innerHTML = '<i class="bi bi-geo-alt-fill text-success"></i> GPS';
+      btn.disabled = false;
+    },
+    () => {
+      btn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Get GPS';
+      btn.disabled = false;
+      alert("GPS unavailable.");
+    },
+    { enableHighAccuracy: true, timeout: 10000 },
+  );
+});
+
+// Search inside modal
+function doMapSearch() {
+  const q = document.getElementById("mapSearchInput")?.value.trim();
+  const resultsEl = document.getElementById("mapSearchResults");
+  if (!q || !resultsEl) return;
+  resultsEl.innerHTML = '<div class="p-2 text-muted small">Searching...</div>';
+
+  fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+  )
+    .then((r) => r.json())
+    .then((results) => {
+      if (!results.length) {
+        resultsEl.innerHTML =
+          '<div class="p-2 text-muted small">No results found.</div>';
+        return;
+      }
+      resultsEl.innerHTML = results
+        .map(
+          (r) =>
+            `<div onclick="window._pickSearchResult(${r.lat},${r.lon})"
+          style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem;color:rgba(255,255,255,0.85);"
+          onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
+          <i class="bi bi-geo-alt me-1 text-warning"></i>${r.display_name.split(",").slice(0, 3).join(", ")}
+        </div>`,
+        )
+        .join("");
+    })
+    .catch(() => {
+      resultsEl.innerHTML =
+        '<div class="p-2 text-danger small">Search failed.</div>';
+    });
+}
+
+window._pickSearchResult = function (lat, lon) {
+  if (!modalMap) initMap();
+  modalMap.setView([lat, lon], 16);
+  placePin(parseFloat(lat), parseFloat(lon));
+  document.getElementById("mapSearchResults").innerHTML = "";
+  document.getElementById("mapSearchInput").value = "";
+};
+
+document.getElementById("mapSearchBtn")?.addEventListener("click", doMapSearch);
+document.getElementById("mapSearchInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") doMapSearch();
+});
+
+// Init map when modal opens
+document
+  .getElementById("createModal")
+  ?.addEventListener("shown.bs.modal", () => {
+    initMap();
+    setTimeout(() => modalMap?.invalidateSize(), 200);
+  });
+
+// ================= BROADCAST LOG =================
+function initBroadcastLog() {
   const container = document.getElementById("broadcastContainer");
   if (!container) return;
 
-  const lang = localStorage.getItem("lang") || "en";
-
-  // Show loading state for Nepali (API delay)
-  if (lang === "np") {
-    container.innerHTML =
-      '<div class="col-12 text-center mt-5"><div class="spinner-border text-light"></div><p class="text-white mt-2">Translating...</p></div>';
-  }
-
-  const categoryMap = {
-    Water: "0d6efd",
-    Road: "dc3545",
-    Waste: "198754",
-    General: "6f42c1",
-    Electricity: "ffc107",
-  };
-
-  let tempHtml = "";
-
-  for (const rawData of cachedBroadcasts) {
-    let displayData = { ...rawData };
-
-    // FIX: Always use the original category for the color/logic
-    const waterCat = rawData.category === "Water" ? "Water" : null;
-    const roadCat = rawData.category === "Road" ? "Road" : null;
-    const wasteCat = rawData.category === "Waste" ? "Waste" : null;
-    const electricityCat =
-      rawData.category === "Electricity" ? "Electricity" : null;
-    const generalCat = rawData.category === "General" ? "General" : null;
-    const color = rawData.emergency
-      ? "e0333d"
-      : categoryMap[generalCat] ||
-        "6f42c1" ||
-        categoryMap[waterCat] ||
-        "0d6efd" ||
-        categoryMap[roadCat] ||
-        "dc3545" ||
-        categoryMap[wasteCat] ||
-        "198754" ||
-        categoryMap[electricityCat] ||
-        "ffc107";
-
-    if (lang === "np") {
-      try {
-        displayData = await translateBroadcast(rawData, "np");
-      } catch (e) {
-        console.error("Translation Error", e);
-      }
+  const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    container.innerHTML = "";
+    if (snapshot.empty) {
+      container.innerHTML =
+        '<div class="col-12 text-center mt-5 text-muted"><h5>No active broadcasts.</h5></div>';
+      return;
     }
+    snapshot.forEach((docSnap) => {
+      const post = docSnap.data();
+      const docId = docSnap.id;
+      const dateString = post.createdAt?.toDate
+        ? post.createdAt.toDate().toLocaleString()
+        : "Syncing...";
+      const borderColor =
+        post.emergency || post.isStrike ? "#dc3545" : "#2A4B79";
+      const cardClass = post.emergency || post.isStrike ? "border-danger" : "";
 
-    const dateString = rawData.createdAt?.toDate
-      ? rawData.createdAt.toDate().toLocaleString()
-      : "Syncing...";
+      const div = document.createElement("div");
+      div.className = "col-md-4 mb-4";
+      div.innerHTML = `
+        <div style="
+          padding:16px; border-radius:12px;
+          background:rgba(255,255,255,0.04);
+          border:1px solid rgba(255,255,255,0.08);
+          border-left:4px solid ${borderColor};
+          position:relative;
+        ">
+          <button class="btn btn-sm btn-outline-danger delete-btn"
+            style="position:absolute;top:10px;right:10px;padding:2px 8px;">
+            <i class="bi bi-trash"></i>
+          </button>
+          ${post.isStrike ? `<span class="badge bg-danger mb-2 me-1">Strike/Roadblock</span>` : ""}
+          ${post.emergency ? `<span class="badge bg-warning text-dark mb-2">Emergency</span>` : ""}
+          <h6 class="fw-bold text-light mb-1">${post.title}</h6>
+          <p class="text-muted small mb-2">${dateString}</p>
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.7);">${post.content}</p>
+          ${post.location ? `<div class="small text-info mt-2"><i class="bi bi-geo-alt-fill me-1"></i>${post.location}</div>` : ""}
+          ${post.lat ? `<div class="small text-muted mt-1" style="font-family:monospace;">${parseFloat(post.lat).toFixed(4)}, ${parseFloat(post.lng).toFixed(4)}</div>` : ""}
+        </div>`;
 
-    tempHtml += `
-      <div class="col-md-4 mb-4">
-          <div class="broadcast-card shadow-sm ${rawData.emergency ? "emergency" : ""}" 
-               style="border-left: 6px solid #${color}; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); position: relative; min-height: 180px;">
-              
-              <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${rawData.id}">
-                  <i class="bi bi-trash"></i>
-              </button>
+      div.querySelector(".delete-btn").addEventListener("click", async () => {
+        if (confirm("Delete this broadcast for everyone?")) {
+          await deleteDoc(doc(db, "broadcasts", docId)).catch(console.error);
+        }
+      });
 
-              <h5 class="fw-bold mt-2">${displayData.title}</h5>
-              <p class="text-muted small mb-2">${dateString}</p>
-              <p class="card-text">${displayData.content}</p>
-          </div>
-      </div>`;
-  }
-
-  container.innerHTML =
-    tempHtml ||
-    '<div class="col-12 text-center mt-5 text-white"><h5>No active broadcasts.</h5></div>';
-
-  // Attach Delete Events
-  container.querySelectorAll(".delete-btn").forEach((btn) => {
-    btn.onclick = async () => {
-      if (confirm("Delete this broadcast?"))
-        await deleteDoc(doc(db, "broadcasts", btn.dataset.id));
-    };
+      container.appendChild(div);
+    });
   });
 }
 
-// 4. CREATE BROADCAST
+// ================= POST BROADCAST =================
 document.getElementById("postBtn")?.addEventListener("click", async () => {
-  const title = document.getElementById("title").value.trim();
-  const content = document.getElementById("content").value.trim();
-  const category = document.getElementById("category").value || "General";
-  const emergency = document.getElementById("emergency").checked;
+  const title = document.getElementById("title")?.value.trim() || "";
+  const content = document.getElementById("content")?.value.trim() || "";
+  const emergency = document.getElementById("emergency")?.checked || false;
+  const isStrike = document.getElementById("isStrike")?.checked || false;
+  const location =
+    document.getElementById("locationNameInput")?.value.trim() || "";
+  const lat = pickedLat;
+  const lng = pickedLng;
 
-  if (!title || !content) return alert("Please fill all fields");
+  if (!title || !content || !lat) {
+    alert("Please fill in title, content, and pick a location on the map.");
+    return;
+  }
 
-  const btn = document.getElementById("postBtn");
-  btn.disabled = true;
-  btn.innerText = "Posting...";
+  const postBtn = document.getElementById("postBtn");
+  postBtn.disabled = true;
+  postBtn.innerHTML =
+    '<span class="spinner-border spinner-border-sm"></span> Posting...';
 
   try {
     await addDoc(collection(db, "broadcasts"), {
       title,
       content,
-      category,
       emergency,
-      wardNumber: currentUserWard,
+      isStrike,
+      location,
+      lat,
+      lng,
+      ward: userWard,
+      municipality: userMunicipality,
+      userId: currentUser.uid,
       createdAt: serverTimestamp(),
     });
-    bootstrap.Modal.getInstance(document.getElementById("createModal")).hide();
-    document.getElementById("title").value = "";
-    document.getElementById("content").value = "";
-  } catch (error) {
-    alert("Error posting");
+
+    // Reset form
+    [
+      "title",
+      "content",
+      "latInput",
+      "lngInput",
+      "locationNameInput",
+      "mapSearchInput",
+    ].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    document.getElementById("emergency").checked = false;
+    if (document.getElementById("isStrike"))
+      document.getElementById("isStrike").checked = false;
+    document.getElementById("locationCoords").textContent = "";
+    pickedLat = null;
+    pickedLng = null;
+    if (selectionMarker && modalMap) {
+      modalMap.removeLayer(selectionMarker);
+      selectionMarker = null;
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById("createModal"))?.hide();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to post. Check Firestore Rules.");
   } finally {
-    btn.disabled = false;
-    btn.innerText = "Post";
+    postBtn.disabled = false;
+    postBtn.innerText = "Post";
   }
-});
-
-// 5. LANGUAGE SWITCHER
-document.getElementById("languageSelect")?.addEventListener("change", (e) => {
-  localStorage.setItem("lang", e.target.value);
-  renderBroadcasts();
-});
-
-// 6. LOGOUT
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  signOut(auth).then(() => (window.location.href = "login.html"));
 });

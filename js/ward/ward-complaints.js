@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-config.js";
+import { auth, db } from "../core/firebase-config.js";
 import {
   onAuthStateChanged,
   signOut,
@@ -8,55 +8,66 @@ import {
   doc,
   updateDoc,
   query,
-  where,
   onSnapshot,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { translateComplaint, translateBatch, translateText,  } from "./translator.js"; // This is key!
+import { translateComplaint } from "../core/translator.js";
 
-let currentUserWard = "N/A";
-let cachedDocs = []; // We store docs here so we can re-render when language changes
+let cachedDocs = [];
 
-const translations = {
-  en: {
-    wardLabel: "Ward",
-    noComplaints: "No complaints for this ward yet.",
-    fromLabel: "From",
-    locationLabel: "Location",
-    updateStatusPlaceholder: "Update Status",
-    statusSubmitted: "Submitted",
-    statusInProgress: "In Progress",
-    statusResolved: "Resolved",
-    translating: "Translating...",
-  },
-  np: {
-    wardLabel: "वार्ड",
-    noComplaints: "यस वार्डका लागि अहिलेसम्म कुनै गुनासो छैन।",
-    fromLabel: "बाट",
-    locationLabel: "स्थान",
-    updateStatusPlaceholder: "स्थिति अद्यावधिक गर्नुहोस्",
-    statusSubmitted: "पेश गरियो",
-    statusInProgress: "प्रगति हुँदैछ",
-    statusResolved: "समाधान भएको",
-    translating: "अनुवाद हुँदैछ...",
-  },
-};
+// ================= AUTH & INITIALIZATION =================
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "../../login.html";
+    return;
+  }
 
-function t(key) {
-  const lang = localStorage.getItem("lang") || "en";
-  return translations[lang]?.[key] || translations.en[key] || key;
+  try {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+
+      // Update UI Header (Top right profile area)
+      if (document.getElementById("uWard"))
+        document.getElementById("uWard").innerText = `Administrator`;
+      if (document.getElementById("uNameTop"))
+        document.getElementById("uNameTop").innerText =
+          userData.fullName || "Official";
+
+      // Load all complaints globally
+      initAllComplaintsListener();
+    }
+  } catch (error) {
+    console.error("Auth Init Error:", error);
+  }
+});
+
+// ================= REAL-TIME DATA FETCHING =================
+function initAllComplaintsListener() {
+  // No "where" clause here ensures all complaints are fetched
+  const q = query(collection(db, "complaints"));
+
+  onSnapshot(
+    q,
+    (snapshot) => {
+      cachedDocs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Sort by Date (Newest first) using Firestore Timestamps
+      cachedDocs.sort((a, b) => {
+        const dateA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const dateB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return dateB - dateA;
+      });
+
+      renderComplaints();
+    },
+    (error) => {
+      console.error("Snapshot Error:", error);
+    },
+  );
 }
 
-function translateStatus(rawStatus) {
-  const map = {
-    Submitted: "statusSubmitted",
-    InProgress: "statusInProgress",
-    Resolved: "statusResolved",
-  };
-  return t(map[rawStatus] || "statusSubmitted");
-}
-
-// Separate Rendering from Data Fetching
+// ================= UI RENDERING =================
 async function renderComplaints() {
   const container = document.getElementById("complaintsContainer");
   if (!container) return;
@@ -64,122 +75,148 @@ async function renderComplaints() {
   const lang = localStorage.getItem("lang") || "en";
 
   if (cachedDocs.length === 0) {
-    container.innerHTML = `<p class='text-muted'>${t("noComplaints")}</p>`;
+    container.innerHTML = `<div class="col-12 text-center mt-5 text-muted"><h5>No complaints found in system.</h5></div>`;
     return;
   }
 
-  // Show a small loader if translating to Nepali
   if (lang === "np") {
-    container.innerHTML = `<div class="col-12 text-center py-3"><em>${t("translating")}</em></div>`;
+    container.innerHTML = `<div class="col-12 text-center mt-5"><div class="spinner-border text-warning"></div><p class="mt-2">अनुवाद गरिँदै...</p></div>`;
   }
 
-  container.innerHTML = "";
+  let cardsHtml = "";
 
-  // Loop through cached docs and translate content if needed
   for (const data of cachedDocs) {
-    let displayData = { ...data };
+    let display = { ...data };
 
-    // Use the API translator for the dynamic content (Title/Description)
+    // Handle Translation if Nepali is selected
     if (lang === "np") {
-      displayData = await translateComplaint(data, "np");
+      try {
+        display = await translateComplaint(data, "np");
+      } catch (e) {}
     }
 
-    const translatedStatus = translateStatus(data.status);
+    // Visual status indicator
+    const statusClass =
+      {
+        Open: "bg-primary",
+        "In Progress": "bg-warning text-dark",
+        Resolved: "bg-success",
+      }[data.status] || "bg-secondary";
 
-    container.innerHTML += `
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm border-0" style="border-radius: 15px; border-left: 6px solid ${getStatusColor(data.status)} !important;">
-                    <div class="card-body">
-                        <h5 class="fw-bold text-primary">${displayData.title}</h5>
-                        <p class="text-muted small mb-2">${t("fromLabel")}: ${data.userName || "Citizen"} | ${t("wardLabel")}: ${data.wardNumber}</p>
-                        <p class="mb-1"><strong>${t("locationLabel")}:</strong> ${data.location}</p>
-                        <p class="card-text">${displayData.description}</p>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge ${getStatusBadgeClass(data.status)}">${translatedStatus}</span>
-                            <select class="form-select form-select-sm w-50" onchange="updateStatus('${data.id}', this.value)">
-                                <option value="" disabled selected>${t("updateStatusPlaceholder")}</option>
-                                <option value="Submitted">${t("statusSubmitted")}</option>
-                                <option value="InProgress">${t("statusInProgress")}</option>
-                                <option value="Resolved">${t("statusResolved")}</option>
+    const dateStr = data.createdAt?.toDate
+      ? data.createdAt.toDate().toLocaleDateString()
+      : "Pending";
+
+    // Photos Logic (Fixes the [object Object] 404 error)
+    let photosHtml = "";
+    if (
+      data.photoUrls &&
+      Array.isArray(data.photoUrls) &&
+      data.photoUrls.length > 0
+    ) {
+      const imgs = data.photoUrls
+        .map((photo) => {
+          const imgUrl = typeof photo === "string" ? photo : photo.url || "";
+          return imgUrl
+            ? `<img src="${imgUrl}" class="photo-thumbnail" onclick="window.open('${imgUrl}', '_blank')">`
+            : "";
+        })
+        .join("");
+
+      if (imgs) {
+        photosHtml = `<div class="d-flex flex-wrap gap-2 mt-3 p-2 rounded" style="background: rgba(0,0,0,0.2);">${imgs}</div>`;
+      }
+    }
+
+    cardsHtml += `
+            <div class="col-md-6 search-target">
+                <div class="glass-box p-4 complaint-card shadow-sm ${data.isHighPriority ? "high-priority" : ""}">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-light search-text mb-0">${display.title || "Untitled"}</h5>
+                        <span class="badge ${statusClass}">${data.status || "Open"}</span>
+                    </div>
+
+                    <p class="text-muted small border-bottom border-secondary border-opacity-25 pb-2 mb-2 search-text">
+                        <i class="bi bi-person me-1"></i>${data.userName || "Citizen"} • 
+                        <i class="bi bi-geo-alt ms-2 me-1"></i>${display.location || "Unknown"} •
+                        <i class="bi bi-clock ms-2 me-1"></i>${dateStr}
+                    </p>
+
+                    <p class="card-text text-light flex-grow-1 search-text" style="font-size: 0.9rem;">
+                        ${display.description || "No description provided."}
+                    </p>
+                    
+                    <div class="mt-3">
+                        <p class="text-muted small mb-2 search-text">Photos:</p>
+                        ${photosHtml}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input priority-toggle" type="checkbox" data-id="${data.id}" ${data.isHighPriority ? "checked" : ""}>
+                            <label class="form-check-label small fw-bold text-danger">High Priority</label>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm admin-input status-select" data-id="${data.id}">
+                                <option value="Submitted" ${data.status === "Submitted" ? "selected" : ""}>Submitted</option>
+                                <option value="In Progress" ${data.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                                <option value="Resolved" ${data.status === "Resolved" ? "selected" : ""}>Resolved</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>`;
   }
+
+  container.innerHTML = cardsHtml;
 }
 
-function loadComplaints() {
-  const q = query(
-    collection(db, "complaints"),
-    where("wardNumber", "==", currentUserWard),
-  );
+// ================= INTERACTION HANDLERS =================
+document
+  .getElementById("complaintsContainer")
+  ?.addEventListener("change", async (e) => {
+    const docId = e.target.getAttribute("data-id");
+    if (!docId) return;
 
-  onSnapshot(q, (snapshot) => {
-    cachedDocs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    // Sort by date
-    cachedDocs.sort(
-      (a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0),
-    );
+    try {
+      if (e.target.classList.contains("status-select")) {
+        await updateDoc(doc(db, "complaints", docId), {
+          status: e.target.value,
+        });
+      }
+      if (e.target.classList.contains("priority-toggle")) {
+        await updateDoc(doc(db, "complaints", docId), {
+          isHighPriority: e.target.checked,
+        });
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+    }
+  });
+
+// Real-time Search Logic
+document.getElementById("searchInput")?.addEventListener("input", (e) => {
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll(".search-target").forEach((card) => {
+    const text = Array.from(card.querySelectorAll(".search-text"))
+      .map((el) => el.innerText.toLowerCase())
+      .join(" ");
+    card.style.display = text.includes(term) ? "block" : "none";
+  });
+});
+
+// Language Select Listener
+const langSelect = document.getElementById("languageSelect");
+if (langSelect) {
+  langSelect.addEventListener("change", () => {
+    localStorage.setItem("lang", langSelect.value);
     renderComplaints();
   });
 }
 
-// Helpers
-function getStatusColor(s) {
-  return s === "Resolved"
-    ? "#198754"
-    : s === "InProgress"
-      ? "#ffc107"
-      : "#0d6efd";
-}
-function getStatusBadgeClass(s) {
-  return s === "Resolved"
-    ? "bg-success"
-    : s === "InProgress"
-      ? "bg-warning text-dark"
-      : "bg-primary";
-}
-
-// --- Initialization ---
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (snap.exists()) {
-    const userData = snap.data();
-    currentUserWard = userData.wardNumber || "N/A";
-    document.getElementById("uWard").innerText = `Ward ${currentUserWard}`;
-    document.getElementById("uNameTop").innerText = userData.fullName || "User";
-    loadComplaints();
-  }
+// Sign Out Logic
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  signOut(auth).then(() => (window.location.href = "../../index.html"));
 });
-
-// Language Switcher Fix
-const langSelect = document.getElementById("languageSelect");
-if (langSelect) {
-  langSelect.value = localStorage.getItem("lang") || "en";
-  langSelect.addEventListener("change", () => {
-    localStorage.setItem("lang", langSelect.value);
-    renderComplaints(); // Re-render without needing to re-fetch from Firebase
-  });
-}
-
-// Search Logic
-document.getElementById("searchInput")?.addEventListener("input", (e) => {
-  const term = e.target.value.toLowerCase();
-  document
-    .querySelectorAll("#complaintsContainer .col-md-6")
-    .forEach((card) => {
-      card.style.display = card.innerText.toLowerCase().includes(term)
-        ? ""
-        : "none";
-    });
-});
-
-window.updateStatus = async (id, status) => {
-  await updateDoc(doc(db, "complaints", id), { status });
-};

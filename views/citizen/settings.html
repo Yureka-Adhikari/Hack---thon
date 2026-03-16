@@ -2,118 +2,241 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CivicSewa - Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicSewa - Account Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="Color_mode.css">
-
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/citizen.css">
     <style>
-        body { background-color: #f0f2f5; }
-        #sidebar { width: 260px; min-height: 100vh; background: #2A4B79; color: white; }
-        .nav-link { color: rgba(255,255,255,0.7); border-radius: 8px; margin: 4px 15px; }
-        .nav-link.active { background: rgba(255,255,255,0.2); color: white; }
-        .card { border: none; border-radius: 12px; transition: 0.3s; }
-        .card:hover { transform: translateY(-2px); }
-        .gradient-custom-2 {
-            background: linear-gradient(to right, rgb(195, 213, 222), #E0F7FA);
-        }
-        .form-control:focus, .form-select:focus { border-color: #2A4B79; box-shadow: 0 0 0 0.2rem rgba(42, 75, 121, 0.25); }
-        .btn-primary { background-color: #2A4B79; border-color: #2A4B79; }
-        .btn-primary:hover { background-color: #1e3a5f; border-color: #1e3a5f; }
+        .settings-layout { display: flex; gap: 2rem; align-items: flex-start; }
+        .settings-menu { flex: 0 0 280px; display: flex; flex-direction: column; gap: 0.5rem; }
+        .settings-tab { padding: 14px 20px; border-radius: 12px; cursor: pointer; color: var(--text-muted); transition: all 0.3s ease; display: flex; align-items: center; gap: 14px; font-weight: 500; border: 1px solid transparent; }
+        .settings-tab:hover { background: rgba(255,255,255,0.05); color: white; }
+        .settings-tab.active { background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, transparent 100%); color: var(--gold); border-left: 3px solid var(--gold); border-top: 1px solid rgba(255,215,0,0.1); border-bottom: 1px solid rgba(255,215,0,0.1); font-weight: 600; }
+        .settings-content { flex-grow: 1; position: relative; }
+        .tab-pane { display: none; animation: paneFadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .tab-pane.active { display: block; }
+        @keyframes paneFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .setting-meta h6 { margin: 0 0 4px 0; color: white; font-weight: 600; font-size: 1rem; }
+        .setting-meta p { margin: 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; max-width: 400px; }
+        .form-switch .form-check-input { width: 3em; height: 1.5em; background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s; }
+        .form-switch .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
+        .profile-avatar-lg { width: 90px; height: 90px; border-radius: 24px; background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--gold); font-weight: 700; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .btn-gold { background: linear-gradient(135deg, rgba(255,215,0,0.9), rgba(200,160,0,0.7)); color: #000; font-weight: 700; border: none; padding: 10px 24px; border-radius: 10px; transition: 0.3s; }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,215,0,0.3); }
+        @media (max-width: 992px) { .settings-layout { flex-direction: column; } .settings-menu { width: 100%; flex: none; flex-direction: row; overflow-x: auto; padding-bottom: 10px; } .settings-tab { white-space: nowrap; } }
     </style>
 </head>
 <body>
-<div class="d-flex">
-    <div id="sidebar" class="d-flex flex-column p-3" style="position: fixed; height: 100vh; overflow-y: auto;">
-        <h3 class="p-3 fw-bold">CivicSewa</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column flex-grow-1" style="color:#2A4B79">
-            <li><a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2 me-2"></i> Dashboard</a></li>
-            <li><a href="my-complaints.html" class="nav-link"><i class="bi bi-chat-dots me-2"></i> My Complaints</a></li>
-            <li><a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf me-2"></i> Documents</a></li>
-            <li><a href="broadcast.html" class="nav-link"><i class="bi bi-broadcast me-2"></i> Broadcast Channel</a></li>
-            <li><a href="road.html" class="nav-link"><i class="bi bi-signpost-2 me-2"></i> Road </a></li>
-            <li><a href="chatbot.html" class="nav-link"><i class="bi bi bi-robot me-2"></i> Guidance Chatbot </a></li>
-            <li><a href="settings.html" class="nav-link active"><i class="bi bi-gear me-2"></i> Settings</a></li>
-        </ul>
-        <hr>
-        <button id="logoutBtn" class="btn btn-outline-light w-100">Sign Out</button>
-    </div>
 
-    <div class="flex-grow-1 d-flex flex-column" style="background-color:#2A4B79; color: white; min-height: 100vh; margin-left: 260px;">
-        <nav class="navbar navbar-expand shadow-sm p-3">
-            <div class="container-fluid">
-                <input type="text" class="form-control w-25" placeholder="Search...">
-                <div class="ms-auto d-flex align-items-center">
-                    <span class="badge bg-primary me-3" id="uWard">Ward --</span>
-                    <strong id="uNameTop">User Name</strong>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-wrap"><i class="bi bi-buildings"></i> <span class="nav-text">CivicSewa</span></div>
+            <i class="bi bi-list fs-3 text-secondary" id="sidebarToggle" style="cursor:pointer;transition:0.2s;"></i>
+        </div>
+        <a href="dashboard.html" class="nav-link"><i class="bi bi-grid-1x2"></i> <span class="nav-text">Dashboard</span></a>
+        <a href="my-complaints.html" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span class="nav-text">My Complaints</span></a>
+        <a href="documents.html" class="nav-link"><i class="bi bi-file-earmark-pdf"></i> <span class="nav-text">Documents</span></a>
+        <a href="broadcast.html" class="nav-link"><i class="bi bi-megaphone"></i> <span class="nav-text">Broadcast</span></a>
+        <a href="road.html" class="nav-link"><i class="bi bi-geo-alt"></i> <span class="nav-text">Map</span></a>
+        <a href="chatbot.html" class="nav-link"><i class="bi bi-robot"></i> <span class="nav-text">Chatbot</span></a>
+        <a href="settings.html" class="nav-link active"><i class="bi bi-gear"></i> <span class="nav-text">Settings</span></a>
+        <button id="logoutBtn" class="sign-out-btn w-100 border-0 mt-auto" data-bs-toggle="modal" data-bs-target="#signOutModal">
+            <i class="bi bi-box-arrow-right"></i> <span class="nav-text">Sign Out</span>
+        </button>
+    </nav>
+
+    <main class="main-wrapper">
+        <header class="top-nav">
+            <div class="search-container">
+                <i class="bi bi-search text-secondary"></i>
+                <input type="text" placeholder="Search settings...">
+            </div>
+            <div class="profile-section">
+                <label class="theme-slider" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider-pill"></span>
+                </label>
+                <select id="languageSelect" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:white;border-radius:8px;padding:6px 12px;outline:none;">
+                    <option value="en" style="background:#110d20;">English</option>
+                    <option value="np" style="background:#110d20;">नेपाली</option>
+                </select>
+                <div class="user-info ps-3 border-start border-secondary">
+                    <div style="line-height:1.3;text-align:right;">
+                        <div class="fw-bold" style="font-size:0.95rem;" id="uNameTop">Loading...</div>
+                        <div id="uWard" style="font-size:0.85rem;color:var(--text-muted);">Ward : --</div>
+                    </div>
                 </div>
             </div>
-        </nav>
+        </header>
 
-        <div class="container-fluid px-5 gradient-custom-2" style="background-color: #c5c5c5; color: rgb(0, 15, 84); min-height: 100vh; padding: 20px;">
-            <h2 class="mb-4">Settings</h2>
+        <div class="mb-4">
+            <h1 class="greeting-title mb-1">Preferences</h1>
+            <p class="text-muted">Manage your identity, security, and notification channels.</p>
+        </div>
 
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card p-4 shadow-sm">
-                        <h5 class="mb-3"><i class="bi bi-person me-2"></i>Profile</h5>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Full Name</label>
-                            <p class="mb-0 fw-medium" id="settingsFullName">—</p>
+        <div class="settings-layout">
+            <div class="glass-box p-3 settings-menu">
+                <div class="settings-tab active" data-target="pane-profile"><i class="bi bi-person-badge fs-5"></i> Identity & Profile</div>
+                <div class="settings-tab" data-target="pane-security"><i class="bi bi-shield-check fs-5"></i> Security Access</div>
+                <div class="settings-tab" data-target="pane-notifications"><i class="bi bi-bell fs-5"></i> Notification Channels</div>
+                <div class="settings-tab" data-target="pane-system"><i class="bi bi-display fs-5"></i> System Display</div>
+            </div>
+
+            <div class="settings-content">
+
+                <div class="glass-box p-4 tab-pane active" id="pane-profile">
+                    <h4 class="fw-bold text-white mb-4">Identity Details</h4>
+                    <div class="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom border-secondary border-opacity-25">
+                        <div class="profile-avatar-lg" id="avatarInitial">U</div>
+                        <div>
+                            <h3 class="mb-1 fw-bold text-white" id="settingsFullName">Loading...</h3>
+                            <span class="badge bg-dark border border-secondary text-muted px-3 py-2 rounded-pill">Verified Citizen</span>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Email</label>
-                            <p class="mb-0 fw-medium" id="settingsEmail">—</p>
+                    </div>
+                    <div class="setting-row pt-0">
+                        <div class="setting-meta">
+                            <h6>Registered Email</h6>
+                            <p id="settingsEmail">Loading...</p>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Ward Number</label>
-                            <p class="mb-0 fw-medium" id="settingsWard">—</p>
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50"><i class="bi bi-check-circle me-1"></i> Verified</span>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-meta">
+                            <h6>Residential Jurisdiction</h6>
+                            <p>Ward <span id="settingsWard">--</span>, <span id="settingsMunicipality">--</span></p>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Municipality</label>
-                            <p class="mb-0 fw-medium" id="settingsMunicipality">—</p>
-                        </div>
+                        <button class="btn btn-sm btn-outline-light border-secondary text-muted" disabled>Locked by Admin</button>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="card p-4 shadow-sm">
-                        <h5 class="mb-3"><i class="bi bi-bell me-2"></i>Email Notifications</h5>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifComplaints" checked>
-                            <label class="form-check-label" for="notifComplaints">Complaint updates</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifBroadcast" checked>
-                            <label class="form-check-label" for="notifBroadcast">Broadcast & announcements</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifEmergency">
-                            <label class="form-check-label" for="notifEmergency">Emergency alerts</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="notifEmail" checked>
-                            <label class="form-check-label" for="notifEmail">Email notifications</label>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="saveNotifBtn">Save Preferences</button>
-                    </div>
 
-                    <div class="card p-4 shadow-sm mt-4">
-                        <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Account & Privacy</h5>
-                        <div class="mb-3">
-                            <label class="form-label">Change Password</label>
-                            <input type="password" class="form-control mb-2" id="newPassword" placeholder="New password">
-                            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password">
+                <div class="glass-box p-4 tab-pane" id="pane-security">
+                    <h4 class="fw-bold text-white mb-4">Security Access</h4>
+                    <div class="setting-row pt-0">
+                        <div class="setting-meta">
+                            <h6>Account Password</h6>
+                            <p>For your security, password changes are handled via a secure encrypted link sent to your inbox.</p>
                         </div>
-                        <button type="button" class="btn btn-outline-primary" id="changePasswordBtn">Update Password</button>
+                        <button class="btn btn-outline-warning" id="resetPasswordBtn"><i class="bi bi-envelope-check me-2"></i>Send Reset Link</button>
                     </div>
+                    <div class="setting-row opacity-50" style="pointer-events:none;">
+                        <div class="setting-meta">
+                            <h6>Two-Factor Authentication (2FA)</h6>
+                            <p>Require a biometric or SMS code when signing in from an unrecognized device.</p>
+                        </div>
+                        <div class="form-check form-switch m-0 p-0">
+                            <input class="form-check-input ms-0" type="checkbox" disabled>
+                        </div>
+                    </div>
+                    <small class="text-warning d-block mt-2"><i class="bi bi-info-circle me-1"></i> 2FA implementation scheduled for Phase 2 deployment.</small>
+                </div>
+
+                <div class="glass-box p-4 tab-pane" id="pane-notifications">
+                    <h4 class="fw-bold text-white mb-4">Notification Channels</h4>
+                    <div class="setting-row pt-0">
+                        <div class="setting-meta">
+                            <h6>Complaint Tracking</h6>
+                            <p>Receive alerts when the status of your submitted civic issues changes.</p>
+                        </div>
+                        <div class="form-check form-switch m-0 p-0">
+                            <input class="form-check-input ms-0" type="checkbox" id="notifComplaints" checked>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-meta">
+                            <h6>Ward Broadcasts</h6>
+                            <p>Get notified about general community announcements and local events.</p>
+                        </div>
+                        <div class="form-check form-switch m-0 p-0">
+                            <input class="form-check-input ms-0" type="checkbox" id="notifBroadcast" checked>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-meta">
+                            <h6 class="text-danger">Emergency Action Alerts</h6>
+                            <p>Critical notifications regarding disasters, road closures, or safety hazards.</p>
+                        </div>
+                        <div class="form-check form-switch m-0 p-0">
+                            <input class="form-check-input ms-0 border-danger bg-danger bg-opacity-25" type="checkbox" id="notifEmergency" checked>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-top border-secondary border-opacity-25 text-end">
+                        <button class="btn btn-gold" id="saveNotifBtn"><i class="bi bi-cloud-check me-2"></i>Save Channels</button>
+                    </div>
+                </div>
+
+                <div class="glass-box p-4 tab-pane" id="pane-system">
+                    <h4 class="fw-bold text-white mb-4">System Display</h4>
+                    <div class="setting-row pt-0">
+                        <div class="setting-meta">
+                            <h6>Interface Theme</h6>
+                            <p>Currently optimized for Deep Space Glassmorphism.</p>
+                        </div>
+                        <select disabled style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);color:white;border-radius:8px;padding:8px 16px;">
+                            <option>Dark (Default)</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-meta">
+                            <h6>Data Export</h6>
+                            <p>Download a JSON archive of all your civic complaints and document metadata.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-info" onclick="alert('Preparing archive. This will be sent to your email.');"><i class="bi bi-download me-2"></i>Request Archive</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div class="modal fade glass-modal" id="signOutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-center p-4">
+                <i class="bi bi-box-arrow-right text-danger fs-1 mb-3 d-block"></i>
+                <h5 class="mb-2 fw-bold text-white">Sign Out</h5>
+                <p class="text-muted small mb-4">Are you sure you want to sign out?</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-outline-light btn-sm w-50" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm w-50" id="confirmSignOutBtn">Sign Out</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-
-<script type="module" src="settings.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', () => document.body.classList.toggle('sidebar-collapsed'));
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.getAttribute('data-target')).classList.add('active');
+            });
+        });
+        const themeToggle = document.getElementById('themeToggle');
+        if (localStorage.getItem('civicsewa_theme') === 'light') { document.body.classList.add('light-theme'); if (themeToggle) themeToggle.checked = true; }
+        if (themeToggle) {
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) { document.body.classList.add('light-theme'); localStorage.setItem('civicsewa_theme', 'light'); }
+                else { document.body.classList.remove('light-theme'); localStorage.setItem('civicsewa_theme', 'dark'); }
+            });
+        }
+    </script>
+    <script type="module" src="../../js/citizen/settings.js"></script>
+    <script type="module">
+        import { auth } from "../../js/core/firebase-config.js";
+        import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        document.getElementById('confirmSignOutBtn').addEventListener('click', function() {
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            signOut(auth).then(() => window.location.replace("../../index.html"));
+        });
+    </script>
 </body>
 </html>

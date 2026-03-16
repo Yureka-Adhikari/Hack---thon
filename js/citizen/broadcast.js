@@ -148,8 +148,8 @@ async function renderBroadcasts() {
         <div style="
           padding: 14px 16px;
           border-radius: 12px;
-          background: rgba(43, 43, 43, 0.89);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgb(15, 151, 255);
+          border: 1px solid rgb(62, 126, 178);
           border-left: 4px solid ${borderColor};
           cursor: pointer;
           transition: 0.2s ease;
