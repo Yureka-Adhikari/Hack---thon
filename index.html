@@ -110,8 +110,8 @@
                 <input type="checkbox" id="themeToggle">
                 <span class="slider-pill"></span>
             </label>
-            <a href="login.html" class="text-decoration-none fw-bold" style="color: var(--text-muted);" id="headerLoginBtn">Sign In</a>
-            <a href="signup.html" class="btn-gold py-2 px-3" id="headerSignupBtn">Join Network</a>
+            <a href="views/citizen/login.html" class="text-decoration-none fw-bold" style="color: var(--text-muted);" id="headerLoginBtn">Sign In</a>
+            <a href="views/citizen/signup.html" class="btn-gold py-2 px-3" id="headerSignupBtn">Join Network</a>
         </div>
     </nav>
 
@@ -126,7 +126,7 @@
                 Move beyond paperwork and fragmented communication. CivicSewa is Nepal’s unified digital platform for real-time issue reporting, Smart Sifarish, and transparent local governance.
             </p>
             <div class="d-flex gap-3 flex-wrap justify-content-center reveal" style="transition-delay: 0.3s;">
-                <a href="signup.html" class="btn-gold" id="heroMainBtn">Deploy for Your Ward</a>
+                <a href="views/citizen/signup.html" class="btn-gold" id="heroMainBtn">Deploy for Your Ward</a>
                 <a href="#platform" class="btn-glass">Explore Modules</a>
             </div>
         </section>
@@ -193,7 +193,7 @@
         <section class="content-section text-center" style="padding-bottom: 160px;">
             <div class="reveal">
                 <h2 class="fw-bold mb-4" style="font-size: clamp(32px, 5vw, 56px);">Ready to modernize your municipality?</h2>
-                <a href="signup.html" class="btn-gold fs-5 px-5 py-3 shadow-lg" id="footerMainBtn">Create Civic Account</a>
+                <a href="views/citizen/signup.html" class="btn-gold fs-5 px-5 py-3 shadow-lg" id="footerMainBtn">Create Civic Account</a>
             </div>
         </section>
     </main>
@@ -253,37 +253,27 @@
         });
     </script>
 
-    <script type="module">
+        <script type="module">
         import { auth, db } from "./js/core/firebase-config.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) { // Note: Removed emailVerified check strictly for hackathon demo speed, add back if needed
-                try {
-                    const snap = await getDoc(doc(db, "users", user.uid));
-                    let targetUrl = "views/citizen/dashboard.html";
-                    
-                    if (snap.exists() && snap.data().role === "ward") {
-                        targetUrl = "views/ward/ward-dashboard.html";
-                    }
+        const loginBtn  = document.getElementById('headerLoginBtn');
+        const signupBtn = document.getElementById('headerSignupBtn');
+        const heroBtn   = document.getElementById('heroMainBtn');
+        const footerBtn = document.getElementById('footerMainBtn');
 
-                    // Update UI Buttons
-                    document.getElementById('headerLoginBtn').innerText = "Go To Dashboard";
-                    document.getElementById('headerLoginBtn').href = targetUrl;
-                    document.getElementById('headerLoginBtn').style.color = "var(--gold)";
-                    
-                    document.getElementById('headerSignupBtn').style.display = "none";
-                    
-                    const heroBtn = document.getElementById('heroMainBtn');
-                    if (heroBtn) { heroBtn.innerText = "Enter Dashboard"; heroBtn.href = targetUrl; }
+        function setGuestState() {
+            loginBtn.innerText = "Sign In";
+            loginBtn.href = "views/citizen/login.html";
+            loginBtn.style.color = "var(--text-muted)";
+            signupBtn.style.display = "";
+            if (heroBtn)   { heroBtn.innerText = "Deploy for Your Ward"; heroBtn.href = "views/citizen/signup.html"; }
+            if (footerBtn) { footerBtn.innerText = "Create Civic Account"; footerBtn.href = "views/citizen/signup.html"; }
+        }
 
-                    const footerBtn = document.getElementById('footerMainBtn');
-                    if (footerBtn) { footerBtn.innerText = "Return to Dashboard"; footerBtn.href = targetUrl; }
-
-                } catch(e) { console.error("Error routing user", e); }
-            }
-        });
+        // Set immediately on load — no waiting for Firebase, no flash
+        setGuestState();
     </script>
 </body>
 </html>

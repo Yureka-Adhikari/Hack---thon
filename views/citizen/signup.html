@@ -4,232 +4,83 @@
 <meta charset="UTF-8">
 <title>CivicSewa | Sign Up</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../../css/base.css">
 <style>
-:root{
-    --primary:#7c3aed;
-    --bg-from:#1e1b4b;
-    --bg-to:#020617;
-    --panel:rgba(255,255,255,.07);
-    --soft:rgba(255,255,255,.05);
-    --border:rgba(255,255,255,.1);
-    --muted:rgba(255,255,255,.5);
-    --gold:#FFD700;
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
 }
+.bg-lines {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(135deg, rgba(255,215,0,.04) 0px, rgba(255,215,0,.04) 1px, transparent 1px, transparent 20px);
+    animation: drift 40s linear infinite;
+}
+@keyframes drift { from{background-position:0 0} to{background-position:1000px 1000px} }
 
-body{
-    background:radial-gradient(circle at top,#1e1b4b,#020617);
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    font-family:"Segoe UI",sans-serif;
-    perspective:1200px;
+.signup-card {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 480px;
+    background: rgba(255,255,255,.05);
+    backdrop-filter: blur(30px);
+    border-radius: 24px;
+    padding: 50px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    border: 1px solid rgba(255,255,255,.08);
+    animation: fadeIn .8s ease;
 }
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
 
-/* flip overlay */
-#themeFlip{
-    position:fixed;
-    inset:0;
-    background:linear-gradient(135deg,#eaf3ff,#dcecf1);
-    z-index:9998;
-    transform:rotateY(90deg);
-    transform-origin:center;
-    transition:.6s cubic-bezier(.77,0,.175,1);
-    backface-visibility:hidden;
-}
-#themeFlip.active{ transform:rotateY(0deg); }
+.card-title { font-weight: 900; color: #fff; text-align: center; margin-bottom: 6px; cursor: pointer; font-size: 1.8rem; }
+.card-title span { color: var(--gold); }
+.card-sub { text-align: center; color: var(--text-muted); font-size: .875rem; margin-bottom: 28px; }
 
-/* bg grid */
-.bg-lines{
-    position:absolute;
-    inset:0;
-    background:
-        repeating-linear-gradient(135deg,
-            rgba(124,58,237,.07) 0px,
-            rgba(124,58,237,.07) 1px,
-            transparent 1px,
-            transparent 18px);
-    animation:drift 40s linear infinite;
+.field-label { color: var(--text-muted); font-size: .8rem; font-weight: 600; margin-bottom: 6px; display: block; }
+.auth-input, .auth-select {
+    width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    color: white; border-radius: 12px; padding: 12px 14px; font-family: inherit;
+    font-size: .9rem; outline: none; transition: .3s;
 }
-@keyframes drift{
-    from{background-position:0 0;}
-    to{background-position:1000px 1000px;}
-}
+.auth-input::placeholder { color: rgba(255,255,255,.3); }
+.auth-input:focus, .auth-select:focus { background: rgba(255,215,0,.07); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,215,0,.1); }
+.auth-select option { background: #0f0b1f; color: white; }
 
-/* ambient glows */
-.glow{
-    position:absolute;
-    border-radius:50%;
-    filter:blur(120px);
-    z-index:0;
-    pointer-events:none;
-    animation:pulse 8s ease-in-out infinite alternate;
+.btn-gold {
+    width: 100%; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
+    font-size: 1rem; font-weight: 700; font-family: inherit;
+    background: linear-gradient(135deg, rgba(255,215,0,.9), rgba(200,160,0,.7));
+    color: #000; transition: .3s; box-shadow: 0 4px 20px rgba(255,215,0,.2);
 }
-.glow-1{ width:50vw; height:50vw; top:-10%; right:5%;  background:#5c3b99; opacity:.5; }
-.glow-2{ width:40vw; height:40vw; bottom:5%; left:-10%; background:#1a3a7c; opacity:.4; animation-delay:-3s; }
-@keyframes pulse{ 0%{transform:scale(1);opacity:.4} 100%{transform:scale(1.1);opacity:.7} }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,215,0,.4); }
 
-/* floating widgets */
-.widget{
-    position:absolute;
-    background:rgba(255,255,255,.04);
-    backdrop-filter:blur(20px);
-    border-radius:16px;
-    box-shadow:0 20px 50px rgba(124,58,237,.15);
-    border:1px solid var(--border);
-    animation:float 8s ease-in-out infinite;
-}
-.w1{width:220px;height:140px;left:6%;top:20%;}
-.w2{width:180px;height:110px;right:8%;top:30%;animation-delay:1s;}
-.w3{width:260px;height:150px;right:12%;bottom:18%;animation-delay:2s;}
-@keyframes float{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
-
-/* dino */
-.dino{
-    position:absolute;
-    right:40px;
-    bottom:40px;
-    font-size:90px;
-    animation:float 6s ease-in-out infinite;
-    filter:drop-shadow(0 0 30px rgba(124,58,237,.6));
-}
-.dino span{
-    position:absolute;
-    top:-20px;
-    right:-20px;
-    background:var(--primary);
-    color:white;
-    font-weight:800;
-    padding:6px 14px;
-    border-radius:14px;
-    font-size:14px;
-}
-
-/* card */
-.signup-card{
-    position:relative;
-    background:var(--panel);
-    backdrop-filter:blur(30px);
-    border-radius:24px;
-    padding:50px;
-    width:100%;
-    max-width:460px;
-    box-shadow:0 30px 80px rgba(0,0,0,.5);
-    border:1px solid var(--border);
-    z-index:10;
-    animation:fadeIn 1s ease;
-}
-@keyframes fadeIn{ from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-
-h2{
-    font-weight:900;
-    color:#fff;
-    text-align:center;
-    margin-bottom:8px;
-    cursor:pointer;
-}
-h2 span{ color:var(--gold); }
-.subtitle{
-    text-align:center;
-    color:var(--muted);
-    font-size:.875rem;
-    margin-bottom:28px;
-}
-
-/* inputs */
-.form-control, .form-select{
-    background:var(--soft);
-    border:1px solid var(--border);
-    color:white;
-    border-radius:12px;
-    padding:12px 14px;
-}
-.form-control::placeholder{ color:rgba(255,255,255,.3); }
-.form-control:focus, .form-select:focus{
-    background:rgba(124,58,237,.15);
-    box-shadow:0 0 0 2px rgba(124,58,237,.4);
-    border-color:var(--primary);
-    color:white;
-}
-.form-select option{ background:#1e1b4b; color:white; }
-.form-label{ color:var(--muted); font-size:.8rem; font-weight:600; margin-bottom:6px; }
-
-/* button */
-.btn-primary{
-    background:linear-gradient(135deg,#7c3aed,#4f46e5);
-    border:none;
-    font-weight:700;
-    border-radius:12px;
-    padding:12px;
-    box-shadow:0 4px 20px rgba(124,58,237,.4);
-    transition:.3s;
-}
-.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(124,58,237,.6); background:linear-gradient(135deg,#6d28d9,#4338ca); }
-
-a{ color:#a78bfa; text-decoration:none; }
-a:hover{ text-decoration:underline; }
-
-/* theme toggle */
-#themeToggle{
-    position:fixed;
-    top:20px;
-    left:20px;
-    z-index:9999;
-    background:var(--primary);
-    color:white;
-    border:none;
-    width:44px;
-    height:44px;
-    border-radius:50%;
-    font-size:18px;
-    cursor:pointer;
-    box-shadow:0 0 20px rgba(124,58,237,.5);
-}
-
-/* modal */
-.modal-content{
-    background:rgba(20,14,40,.97);
-    backdrop-filter:blur(30px);
-    border:1px solid var(--border);
-    border-radius:20px;
-    color:white;
-}
-.modal-content h5{ color:white; }
-.modal-content p{ color:var(--muted); }
+a { color: var(--gold); text-decoration: none; opacity: .8; }
+a:hover { opacity: 1; text-decoration: underline; }
 </style>
 </head>
 
 <body>
 
-<div id="themeFlip"></div>
-<button id="themeToggle">☀️</button>
-
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
 <div class="bg-lines"></div>
-<div class="glow glow-1"></div>
-<div class="glow glow-2"></div>
-<div class="widget w1"></div>
-<div class="widget w2"></div>
-<div class="widget w3"></div>
-
-<div class="dino">🦖<span>CivicSewa</span></div>
 
 <div class="signup-card">
-    <h2 onclick="location.href='index.html'">Civic<span>Sewa</span></h2>
-    <p class="subtitle">Join the national smart governance network</p>
+    <h2 class="card-title" onclick="location.href='../../index.html'">Civic<span>Sewa</span></h2>
+    <p class="card-sub">Join the national smart governance network</p>
 
     <form id="regForm">
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">Full Name</label>
-                <input type="text" id="fullName" class="form-control" placeholder="Aayush Sharma" required>
+                <label class="field-label">Full Name</label>
+                <input type="text" id="fullName" class="auth-input" placeholder="Aayush Sharma" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Account Type</label>
-                <select id="userType" class="form-select" required>
+                <label class="field-label">Account Type</label>
+                <select id="userType" class="auth-select" required>
                     <option value="resident">Citizen / Resident</option>
                     <option value="ward">Ward Official</option>
                 </select>
@@ -238,34 +89,34 @@ a:hover{ text-decoration:underline; }
 
         <div class="row g-3 mb-3" id="wardFields" style="display:none;">
             <div class="col-md-6">
-                <label class="form-label">Ward No.</label>
-                <input type="number" id="ward" class="form-control" placeholder="e.g. 10">
+                <label class="field-label">Ward No.</label>
+                <input type="number" id="ward" class="auth-input" placeholder="e.g. 10">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Municipality</label>
-                <input type="text" id="muni" class="form-control" placeholder="Lalitpur">
+                <label class="field-label">Municipality</label>
+                <input type="text" id="muni" class="auth-input" placeholder="Lalitpur">
             </div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
+            <label class="field-label">Email Address</label>
+            <input type="email" id="regEmail" class="auth-input" placeholder="name@example.com" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Phone Number</label>
-            <input type="tel" id="phone" class="form-control" placeholder="+977 98XXXXXXXX">
+            <label class="field-label">Phone Number</label>
+            <input type="tel" id="phone" class="auth-input" placeholder="+977 98XXXXXXXX">
         </div>
 
         <div class="mb-4">
-            <label class="form-label">Password</label>
-            <input type="password" id="regPass" class="form-control" placeholder="Create a strong password" required>
+            <label class="field-label">Password</label>
+            <input type="password" id="regPass" class="auth-input" placeholder="Create a strong password" required>
         </div>
 
-        <button type="button" id="registerBtn" class="btn btn-primary w-100">Create Account</button>
+        <button type="button" id="registerBtn" class="btn-gold">Create Account</button>
 
         <div class="text-center mt-3 small">
-            <span style="color:var(--muted);">Already have an account?</span>
+            <span style="color:var(--text-muted);">Already have an account?</span>
             <a href="login.html"> Sign in here</a>
         </div>
     </form>
@@ -273,22 +124,21 @@ a:hover{ text-decoration:underline; }
 
 <div class="modal fade" id="verificationModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center p-4">
-            <div class="mb-3" style="font-size:2.5rem;">✅</div>
-            <h5 class="fw-bold">Account Created!</h5>
-            <p class="small mt-2">
+        <div class="modal-content text-center p-4" style="background:rgba(20,14,40,.97);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.08);border-radius:20px;color:white;">
+            <div style="font-size:2.5rem;margin-bottom:12px;">✅</div>
+            <h5 class="fw-bold text-white">Account Created!</h5>
+            <p class="small mt-2" style="color:var(--text-muted);">
                 We've sent a verification link to:<br>
                 <strong id="verifyEmail" style="color:var(--gold);"></strong>
             </p>
-            <p class="small">Please verify your email before signing in.</p>
-            <button type="button" id="resendBtn" class="btn btn-outline-light rounded-pill mt-2 w-100 fw-semibold">Resend Verification Email</button>
-            <button type="button" class="btn btn-primary rounded-pill mt-2 w-100 fw-semibold" onclick="window.location.href='login.html'">Go to Login</button>
+            <p class="small" style="color:var(--text-muted);">Please verify your email before signing in.</p>
+            <button type="button" id="resendBtn" class="btn-gold mt-2" style="border-radius:10px;padding:10px;">Resend Verification Email</button>
+            <button type="button" class="btn-gold mt-2" style="border-radius:10px;padding:10px;background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.15);" onclick="window.location.href='login.html'">Go to Login</button>
         </div>
     </div>
 </div>
 
 <script>
-// Ward field toggle
 document.getElementById("userType").addEventListener("change", (e) => {
     const wardFields = document.getElementById("wardFields");
     if (e.target.value === "ward") {
@@ -301,18 +151,9 @@ document.getElementById("userType").addEventListener("change", (e) => {
         document.getElementById("muni").required = false;
     }
 });
-
-// Theme toggle (light mode available)
-const toggle = document.getElementById("themeToggle");
-const flip = document.getElementById("themeFlip");
-toggle.onclick = () => {
-    flip.classList.add("active");
-    setTimeout(() => { flip.classList.remove("active"); }, 600);
-};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="js/core/auth-check.js"></script>
-
+<script type="module" src="../../js/core/auth-check.js"></script>
 </body>
 </html>

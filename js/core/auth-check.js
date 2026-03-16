@@ -1,8 +1,7 @@
-import { auth, db } from "./firebase-config.js";
+import { auth, db } from "../../js/core/firebase-config.js";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
@@ -16,7 +15,7 @@ function getRoleAndRedirect(uid) {
     .then((snap) => {
       if (!snap.exists()) {
         console.warn("User doc not found for uid:", uid);
-        window.location.href = "dashboard.html";
+        window.location.href = "../citizen/dashboard.html";
         return;
       }
       const data = snap.data();
@@ -24,14 +23,14 @@ function getRoleAndRedirect(uid) {
       const role = (data.role || "").toString().toLowerCase().trim();
       console.log("Resolved role:", role);
       if (role === "ward") {
-        window.location.href = "ward-dashboard.html";
+        window.location.href = "../ward/ward-dashboard.html";
       } else {
-        window.location.href = "dashboard.html";
+        window.location.href = "../citizen/dashboard.html";
       }
     })
     .catch((e) => {
       console.error("Error fetching user data:", e);
-      window.location.href = "dashboard.html";
+      window.location.href = "../citizen/dashboard.html";
     });
 }
 
@@ -43,18 +42,7 @@ function showVerificationModal(email) {
   verificationModal.show();
 }
 
-// Redirect if already logged in
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    user.reload().then(() => {
-      if (user.emailVerified) {
-        getRoleAndRedirect(user.uid);
-      } else {
-        showVerificationModal(user.email);
-      }
-    });
-  }
-});
+// No auto-redirect on page load — users must always log in explicitly
 
 // Resend button (both pages)
 const resendBtn = document.getElementById("resendBtn");
@@ -121,6 +109,9 @@ if (registerBtn) {
       console.log("User created:", cred.user.uid);
 
       await sendEmailVerification(cred.user);
+
+      // Sign out immediately so onAuthStateChanged doesn't interfere
+      await auth.signOut();
 
       console.log("About to save user doc with role:", userType);
       await setDoc(doc(db, "users", cred.user.uid), {
