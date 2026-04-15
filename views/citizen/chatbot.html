@@ -203,8 +203,8 @@
         </header>
 
         <div class="mb-4">
-            <h1 class="greeting-title mb-1">AI Guidance Chatbot</h1>
-            <p class="text-muted">Ask questions about civic regulations, procedures, and municipal services.</p>
+            <h1 class="greeting-title mb-1" id="pageTitleEl">AI Guidance Chatbot</h1>
+            <p class="text-muted" id="pageSubtitleEl">Ask questions about civic regulations, procedures, and municipal services.</p>
         </div>
 
         <div class="glass-box chat-container overflow-hidden">
@@ -214,7 +214,7 @@
                     <div class="bg-warning bg-opacity-25 p-2 rounded-circle d-flex align-items-center justify-content-center" style="width:35px; height:35px;">
                         <i class="bi bi-robot text-warning fs-5"></i>
                     </div>
-                    <span class="fw-bold text-white">CivicSewa Assistant</span>
+                    <span class="fw-bold text-white" id="assistantNameEl">CivicSewa Assistant</span>
                     <span class="badge bg-success bg-opacity-25 text-success ms-2" style="font-size: 0.6rem;"><i class="bi bi-circle-fill small me-1"></i>Online</span>
                 </div>
                 <button id="exportChat" class="btn btn-sm btn-outline-light border-secondary">
@@ -224,13 +224,13 @@
 
             <div class="chat-body" id="chatBody">
                 <div class="message ai">
-                    <div class="content">Hello! I'm your CivicSewa AI assistant. How can I help you with your local municipal issues or Smart Sifarish today?</div>
+                    <div class="content" id="welcomeMsg">Hello! I'm your CivicSewa AI assistant. How can I help you with your local municipal issues or Smart Sifarish today?</div>
                     <div class="timestamp">System</div>
                 </div>
             </div>
 
             <div id="typingIndicator" class="px-4 pb-2 text-muted small d-none">
-                <i class="bi bi-robot me-1"></i> AI is thinking<span class="typing-dots"></span>
+                <i class="bi bi-robot me-1"></i> <span id="thinkingText">AI is thinking</span><span class="typing-dots"></span>
             </div>
 
             <div class="p-3 border-top border-secondary border-opacity-25 bg-dark bg-opacity-10">

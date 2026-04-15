@@ -1,5 +1,11 @@
 import { auth, db } from "../core/firebase-config.js";
 import {
+  translateText,
+  translateBatch,
+  translateComplaint,
+  translateBroadcast,
+} from "../core/translator.js";
+import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
@@ -79,6 +85,9 @@ const translations = {
     hotTopic: "Today's Hot Topic",
     readMore: "Read Full Article",
     emergencyContacts: "Emergency (Nepal)",
+    citizenProfile: "Citizen Profile",
+    syncing: "Syncing...",
+    latestTitle: "No complaints yet",
   },
   np: {
     searchPlaceholder: "खोज्नुहोस्...",
@@ -135,6 +144,9 @@ const translations = {
     hotTopic: "आजको मुख्य विषय",
     readMore: "पूरा लेख पढ्नुहोस्",
     emergencyContacts: "आपत्कालीन (नेपाल)",
+    citizenProfile: "नागरिक प्रोफाइल",
+    syncing: "सिन्क हुँदैछ...",
+    latestTitle: "अहिलेसम्म कुनै गुनासो छैन",
   },
 };
 
@@ -175,27 +187,6 @@ const categoryMap = {
 
 // ================= LINGVA TRANSLATION (API) =================
 const translateCache = {};
-async function lingvaTranslate(text, targetLang) {
-  if (!text || targetLang === "en") return text;
-  const cacheKey = `${targetLang}:${text}`;
-  if (translateCache[cacheKey]) return translateCache[cacheKey];
-  try {
-    const res = await fetch(
-      `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
-    );
-    const json = await res.json();
-    const translated = json.translation || text;
-    translateCache[cacheKey] = translated;
-    return translated;
-  } catch {
-    return text;
-  }
-}
-
-async function lingvaTranslateAll(texts, targetLang) {
-  if (targetLang === "en") return texts;
-  return Promise.all(texts.map((txt) => lingvaTranslate(txt, targetLang)));
-}
 
 // ================= AUTH LISTENER =================
 onAuthStateChanged(auth, async (user) => {
@@ -229,7 +220,10 @@ onAuthStateChanged(auth, async (user) => {
   );
   const snapshot = await getDocs(q);
   if (!snapshot.empty) cachedLatestComplaint = snapshot.docs[0].data();
+  const currentLang = localStorage.getItem("lang") || "en";
   await renderLatestComplaint();
+  // Re-apply language after data loads (in case lang was set before data arrived)
+  if (currentLang === "np") await updateLanguage(currentLang);
 });
 
 // ================= RENDER LATEST COMPLAINT =================
@@ -253,7 +247,11 @@ async function renderLatestComplaint() {
   if (lang === "np" && titleEl) {
     titleEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${t("translating")}`;
   }
-  const translatedTitle = await lingvaTranslate(d.title, lang);
+  const { title: translatedTitle } = await translateComplaint(d, lang);
+  const translatedLocation =
+    lang === "np" && d.location
+      ? await translateText(d.location, lang)
+      : d.location || "-";
 
   if (titleEl) titleEl.innerText = translatedTitle;
   if (statusEl) {
@@ -261,7 +259,7 @@ async function renderLatestComplaint() {
     statusEl.innerText = translateStatus(d.status);
   }
   if (catEl) catEl.innerText = translateCategory(d.category);
-  if (locEl) locEl.innerText = d.location || "-";
+  if (locEl) locEl.innerText = translatedLocation;
 
   updateProgress(d.status);
 }
@@ -315,12 +313,13 @@ async function renderBroadcasts() {
     updatesList.innerHTML = `<li class="text-muted small p-1"><span class="spinner-border spinner-border-sm me-1"></span>${t("translating")}</li>`;
   }
 
-  const titles = cachedBroadcasts.map((b) => b.title);
-  const translatedTitles = await lingvaTranslateAll(titles, lang);
-  const translatedList = cachedBroadcasts.map((b, i) => ({
-    ...b,
-    title: translatedTitles[i],
-  }));
+  const translatedList = await Promise.all(
+    cachedBroadcasts.map(async (b) => {
+      if (lang !== "np") return b;
+      const { title } = await translateBroadcast(b, lang);
+      return { ...b, title };
+    }),
+  );
 
   updatesList.innerHTML = emergencyList.innerHTML = "";
   let hasRegular = false,
@@ -388,8 +387,13 @@ async function renderUpcomingEvents() {
     return;
   }
 
-  const titles = upcoming.map((e) => e.title);
-  const translated = await lingvaTranslateAll(titles, lang);
+  const translated = await Promise.all(
+    upcoming.map(async (e) => {
+      if (lang !== "np") return e.title;
+      const { title } = await translateBroadcast(e, lang);
+      return title;
+    }),
+  );
 
   list.innerHTML = "";
   upcoming.forEach((ev, i) => {
@@ -444,6 +448,8 @@ function updateProgress(status) {
 // ================= UPDATE LANGUAGE =================
 async function updateLanguage(lang) {
   const data = translations[lang] || translations.en;
+
+  // 1. Static [data-i18n] elements
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (!key || data[key] === undefined) return;
@@ -455,6 +461,52 @@ async function updateLanguage(lang) {
     if (data[key]) el.innerText = data[key];
   });
 
+  // 2. Quick action button labels (rendered by JS, not data-i18n)
+  const qaLabels = {
+    quickWater: data.noWater || "No Water",
+    quickElectric: data.noElectricity || "No Electricity",
+    quickRoad: data.roadDamage || "Road Damage",
+  };
+  Object.entries(qaLabels).forEach(([id, label]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const span = el.querySelector("span") || el;
+      span.innerText = label;
+    }
+  });
+
+  // 3. Section headings that may not have data-i18n
+  const staticMap = {
+    uWard: document.getElementById("uWard")?.dataset?.raw
+      ? `${data.wardLabel || "Ward"} ${document.getElementById("uWard").dataset.raw}`
+      : null,
+  };
+
+  // 4. Hot topic section translation
+  if (lang === "np") {
+    const titleEl = document.getElementById("hotTopicTitle");
+    const bodyEl = document.getElementById("hotTopicBody");
+    if (titleEl && titleEl.dataset.original) {
+      titleEl.innerText = await translateText(titleEl.dataset.original, lang);
+    } else if (titleEl && !titleEl.dataset.original) {
+      titleEl.dataset.original = titleEl.innerText;
+      titleEl.innerText = await translateText(titleEl.dataset.original, lang);
+    }
+    if (bodyEl && bodyEl.dataset.original) {
+      bodyEl.innerText = await translateText(bodyEl.dataset.original, lang);
+    } else if (bodyEl && !bodyEl.dataset.original) {
+      bodyEl.dataset.original = bodyEl.innerText;
+      bodyEl.innerText = await translateText(bodyEl.dataset.original, lang);
+    }
+  } else {
+    // Restore originals when switching back to English
+    const titleEl = document.getElementById("hotTopicTitle");
+    const bodyEl = document.getElementById("hotTopicBody");
+    if (titleEl?.dataset.original) titleEl.innerText = titleEl.dataset.original;
+    if (bodyEl?.dataset.original) bodyEl.innerText = bodyEl.dataset.original;
+  }
+
+  // 5. Re-render dynamic sections with new language
   await renderLatestComplaint();
   await renderBroadcasts();
   await renderUpcomingEvents();

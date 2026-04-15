@@ -1,5 +1,11 @@
 import { auth, db } from "../core/firebase-config.js";
 import {
+  translateText,
+  translateBatch,
+  translateComplaint,
+  translateBroadcast,
+} from "../core/translator.js";
+import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
@@ -15,25 +21,6 @@ import {
   orderBy,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
-// ===== LINGVA TRANSLATION =====
-const translateCache = {};
-async function lingvaTranslate(text, targetLang) {
-  if (!text || targetLang === "en") return text;
-  const cacheKey = `${targetLang}:${text}`;
-  if (translateCache[cacheKey]) return translateCache[cacheKey];
-  try {
-    const res = await fetch(
-      `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
-    );
-    const json = await res.json();
-    const translated = json.translation || text;
-    translateCache[cacheKey] = translated;
-    return translated;
-  } catch {
-    return text;
-  }
-}
 
 const translations = {
   en: {
@@ -99,52 +86,93 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
+  console.log("Auth OK, uid:", user.uid);
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (snap.exists()) {
-    const data = snap.data();
-    if (data.role !== "ward") {
-      alert("Access denied. Ward officials only.");
-      await signOut(auth);
-      window.location.href = "../citizen/login.html";
-      return;
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    console.log("User doc exists:", snap.exists());
+
+    if (snap.exists()) {
+      const data = snap.data();
+      console.log("User doc data:", JSON.stringify(data));
+
+      // Accept ward role OR allow if redirected from login with admin selector
+      // (role may be missing for manually created ward accounts)
+      const role = (data.role || "").toString().toLowerCase().trim();
+      if (role && role !== "ward") {
+        alert("Access denied. Ward officials only.");
+        await signOut(auth);
+        window.location.href = "../citizen/login.html";
+        return;
+      }
+
+      const nameEl = document.getElementById("uNameMain");
+      const nameTopEl = document.getElementById("uNameTop");
+      const wardEl = document.getElementById("uWard");
+      const name = data.fullName || user.email?.split("@")[0] || "Official";
+      if (nameEl) nameEl.innerText = name;
+      if (nameTopEl) nameTopEl.innerText = name;
+
+      // Handle wardNumber as string or number
+      userWard =
+        data.wardNumber != null ? String(data.wardNumber).trim() : "N/A";
+      userMunicipality =
+        data.municipality != null ? String(data.municipality).trim() : "N/A";
+
+      console.log("userWard:", userWard, "userMunicipality:", userMunicipality);
+
+      if (wardEl) wardEl.innerText = `Ward ${userWard}, ${userMunicipality}`;
+    } else {
+      // No user doc — create a minimal one so dashboard works
+      console.warn(
+        "No user doc found for uid:",
+        user.uid,
+        "— using email fallback",
+      );
+      const nameTopEl = document.getElementById("uNameTop");
+      const nameEl = document.getElementById("uNameMain");
+      const name = user.email?.split("@")[0] || "Official";
+      if (nameTopEl) nameTopEl.innerText = name;
+      if (nameEl) nameEl.innerText = name;
+      // userWard stays N/A — complaints won't filter but at least dashboard loads
     }
-    const nameEl = document.getElementById("uNameMain");
-    const nameTopEl = document.getElementById("uNameTop");
-    const wardEl = document.getElementById("uWard");
-    if (nameEl) nameEl.innerText = data.fullName || "Official";
-    if (nameTopEl) nameTopEl.innerText = data.fullName || "Official";
-    userWard = data.wardNumber || "N/A";
-    userMunicipality = data.municipality || "N/A";
-    if (wardEl) wardEl.innerText = `Ward ${userWard}, ${userMunicipality}`;
+  } catch (e) {
+    console.error("Error loading user doc:", e);
   }
 
   loadBroadcasts();
-  await loadWardStats();
-  await loadComplaints();
+  loadComplaintsLive();
   setupAlertButton();
 });
 
 // ================= WARD STATS =================
 async function loadWardStats() {
   if (userWard === "N/A") return;
-  const q = query(
-    collection(db, "complaints"),
-    where("wardNumber", "==", userWard),
-    where("municipality", "==", userMunicipality),
-  );
-  const snapshot = await getDocs(q);
+  // Fetch all complaints, filter client-side — no composite index needed
+  const snapshot = await getDocs(collection(db, "complaints"));
+  const wardStr = String(userWard).trim().toLowerCase();
+  const muniStr = String(userMunicipality).trim().toLowerCase();
 
   let open = 0,
     inProgress = 0,
     resolved = 0,
     highPriority = 0;
   snapshot.forEach((d) => {
-    const s = d.data().status;
+    const data = d.data();
+    const docWard = String(data.wardNumber || "")
+      .trim()
+      .toLowerCase();
+    const docMuni = String(data.municipality || "")
+      .trim()
+      .toLowerCase();
+    // Match ward — also accept if municipality matches when ward is blank
+    if (docWard !== wardStr && docMuni !== muniStr) return;
+    if (docWard !== wardStr) return;
+    const s = data.status;
     if (s === "Submitted") open++;
     else if (s === "In Progress") inProgress++;
     else if (s === "Resolved") resolved++;
-    if (d.data().isHighPriority === true) highPriority++;
+    if (data.isHighPriority === true) highPriority++;
   });
 
   const kpiOpenEl = document.getElementById("kpiOpen");
@@ -163,16 +191,19 @@ async function loadWardStats() {
 async function loadComplaints() {
   const container = document.getElementById("complaintsContainer");
   if (!container || userWard === "N/A") return;
-  container.innerHTML = "";
+  container.innerHTML = '<p class="text-muted small">Loading...</p>';
 
-  const q = query(
-    collection(db, "complaints"),
-    where("wardNumber", "==", userWard),
-    where("municipality", "==", userMunicipality),
-  );
-  const snapshot = await getDocs(q);
+  // Fetch all, filter client-side — avoids composite index issues
+  const snapshot = await getDocs(collection(db, "complaints"));
+  const wardStr = String(userWard).trim().toLowerCase();
   const complaints = [];
-  snapshot.forEach((d) => complaints.push(d.data()));
+  snapshot.forEach((d) => {
+    const data = d.data();
+    const docWard = String(data.wardNumber || "")
+      .trim()
+      .toLowerCase();
+    if (docWard === wardStr) complaints.push({ id: d.id, ...data });
+  });
   complaints.sort(
     (a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0),
   );
@@ -197,6 +228,91 @@ async function loadComplaints() {
         </div>
         <span class="badge ${badgeClass} ms-2" style="white-space:nowrap;">${c.status}</span>
       </div>`;
+  });
+}
+
+// ================= LIVE COMPLAINTS (real-time) =================
+function loadComplaintsLive() {
+  const wardStr = String(userWard).trim();
+  const filterByWard = wardStr && wardStr !== "N/A";
+  console.log(
+    "loadComplaintsLive — wardStr:",
+    wardStr,
+    "filtering:",
+    filterByWard,
+  );
+
+  onSnapshot(collection(db, "complaints"), (snapshot) => {
+    const complaints = [];
+    let open = 0,
+      inProgress = 0,
+      resolved = 0,
+      highPriority = 0;
+    console.log("Total complaints in Firestore:", snapshot.size);
+
+    snapshot.forEach((d) => {
+      const data = d.data();
+      if (filterByWard) {
+        const docWard = String(data.wardNumber ?? "").trim();
+        // Case-insensitive, handles "4" vs 4 vs "04"
+        if (
+          docWard.toLowerCase() !== wardStr.toLowerCase() &&
+          docWard !== wardStr
+        )
+          return;
+      }
+      complaints.push({ id: d.id, ...data });
+      const s = data.status;
+      if (s === "Submitted") open++;
+      else if (s === "In Progress") inProgress++;
+      else if (s === "Resolved") resolved++;
+      if (data.isHighPriority === true) highPriority++;
+    });
+
+    // Update KPIs
+    const kpiOpenEl = document.getElementById("kpiOpen");
+    const kpiProgEl = document.getElementById("kpiProg");
+    const kpiResEl = document.getElementById("kpiRes");
+    const kpiHighEl = document.getElementById("kpiHigh");
+    if (kpiOpenEl) kpiOpenEl.textContent = open + inProgress;
+    if (kpiProgEl) kpiProgEl.textContent = inProgress;
+    if (kpiResEl) kpiResEl.textContent = resolved;
+    if (kpiHighEl) kpiHighEl.textContent = highPriority;
+
+    // Update chart
+    if (window.updateChart) window.updateChart(open, inProgress, resolved);
+
+    // Update complaints list
+    const container = document.getElementById("complaintsContainer");
+    if (!container) return;
+
+    complaints.sort(
+      (a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0),
+    );
+
+    if (complaints.length === 0) {
+      container.innerHTML =
+        "<p class='text-muted small'>No complaints for this ward yet.</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+    complaints.slice(0, 10).forEach((c) => {
+      const badgeClass =
+        c.status === "Submitted"
+          ? "bg-primary"
+          : c.status === "In Progress"
+            ? "bg-warning text-dark"
+            : "bg-success";
+      container.innerHTML += `
+        <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+          <div>
+            <div class="fw-semibold text-light" style="font-size:0.9rem;">${c.title}</div>
+            <small class="text-muted">${c.location || ""} · ${c.createdAt ? c.createdAt.toDate().toLocaleDateString() : ""}</small>
+          </div>
+          <span class="badge ${badgeClass} ms-2" style="white-space:nowrap;">${c.status}</span>
+        </div>`;
+    });
   });
 }
 
@@ -228,7 +344,7 @@ async function renderBroadcasts() {
   const titles = cachedBroadcasts.map((b) => b.title);
   const translatedTitles =
     lang === "np"
-      ? await Promise.all(titles.map((t) => lingvaTranslate(t, lang)))
+      ? await Promise.all(titles.map((t) => translateText(t, lang)))
       : titles;
 
   const translated = cachedBroadcasts.map((b, i) => ({
@@ -293,6 +409,8 @@ function setupAlertButton() {
         category,
         emergency,
         location,
+        lat: gpsLat || null,
+        lng: gpsLng || null,
         gpsLocation: gpsLat ? { latitude: gpsLat, longitude: gpsLng } : null,
         ward: userWard,
         municipality: userMunicipality,
@@ -331,6 +449,7 @@ const langSelect = document.getElementById("languageSelect");
 if (langSelect) {
   const stored = localStorage.getItem("lang") || "en";
   langSelect.value = stored;
+  if (stored !== "en") renderBroadcasts();
   langSelect.addEventListener("change", async () => {
     localStorage.setItem("lang", langSelect.value);
     await renderBroadcasts();

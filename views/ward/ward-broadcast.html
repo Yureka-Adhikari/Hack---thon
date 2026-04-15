@@ -93,6 +93,17 @@
                             <textarea id="content" class="form-control" rows="4" style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:white;" placeholder="Broadcast message..."></textarea>
                         </div>
                         <div>
+                            <label class="form-label small text-muted fw-bold">Category</label>
+                            <select id="broadcastCategory" class="form-select" style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:white;">
+                                <option value="Water"       style="background:#110d20;">💧 Water & Sanitation</option>
+                                <option value="Road"        style="background:#110d20;">🚧 Roads & Transport</option>
+                                <option value="Waste"       style="background:#110d20;">🗑️ Waste Management</option>
+                                <option value="Electricity" style="background:#110d20;">⚡ Electricity</option>
+                                <option value="General" selected style="background:#110d20;">📢 General Announcement</option>
+                            </select>
+                        </div>
+
+                        <div>
                             <label class="form-label small text-muted fw-bold">Location (pick on map) *</label>
                             <div class="d-flex gap-2 mb-1">
                                 <input type="text" id="locationNameInput" class="form-control" style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:white;flex:1;" placeholder="Address auto-fills on pin">

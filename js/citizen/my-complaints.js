@@ -15,6 +15,8 @@ import {
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+import { translateComplaint, translateText } from "../core/translator.js";
+
 // ===== LINGVA TRANSLATION =====
 const translateCache = {};
 async function lingvaTranslate(text, targetLang) {
@@ -441,76 +443,91 @@ function loadComplaints(user) {
 async function renderComplaints() {
   const container = document.getElementById("complaintsListContainer");
   if (!container) return;
+
   const lang = localStorage.getItem("lang") || "en";
 
   if (cachedComplaints.length === 0) {
-    container.innerHTML = `<div class="alert alert-info">${t("noComplaints")}</div>`;
+    container.innerHTML = `<div class="col-12 text-center mt-5 text-muted"><h5>No complaints found.</h5></div>`;
     return;
   }
 
   if (lang === "np") {
-    container.innerHTML = `<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>${t("translating")}</div>`;
+    container.innerHTML = `<div class="col-12 text-center mt-5"><div class="spinner-border text-warning"></div><p class="mt-2">अनुवाद गरिँदै...</p></div>`;
   }
 
-  const translatedList = await Promise.all(
-    cachedComplaints.map(async (data) => {
-      if (lang !== "np") return data;
-      const [title, description] = await Promise.all([
-        lingvaTranslate(data.title, lang),
-        lingvaTranslate(data.description, lang),
-      ]);
-      return { ...data, title, description };
-    }),
-  );
+  let cardsHtml = "";
 
-  container.innerHTML = "";
-  translatedList.forEach((data) => {
-    const createdDate = data.createdAt?.toDate?.() || new Date();
-    const formattedDate =
-      createdDate.toLocaleDateString() + " " + createdDate.toLocaleTimeString();
-    const statusClass = data.status.replace(/\s+/g, "");
+  for (const data of cachedComplaints) {
+    let display = { ...data };
 
+    // Handle Translation if Nepali is selected
+    if (lang === "np") {
+      try {
+        display = await translateComplaint(data, "np");
+      } catch (e) {}
+    }
+
+    // Visual status indicator
+    const statusClass =
+      {
+        Submitted: "bg-primary",
+        "In Progress": "bg-warning text-dark",
+        Resolved: "bg-success",
+      }[data.status] || "bg-secondary";
+
+    const dateStr = data.createdAt?.toDate
+      ? data.createdAt.toDate().toLocaleDateString()
+      : "Pending";
+
+    // Photos Logic (Fixes the [object Object] 404 error)
     let photosHtml = "";
-    if (data.photoUrls?.length > 0) {
-      photosHtml = `
-        <div class="mt-3">
-          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#photos-${data.id}">
-            <i class="bi bi-images"></i> View Photos (${data.photoUrls.length})
-          </button>
-          <div class="collapse mt-2" id="photos-${data.id}">
-            <div class="row g-2">
-              ${data.photoUrls
-                .map((p, i) => {
-                  const url = typeof p === "object" ? p.url : p;
-                  const thumb =
-                    typeof p === "object" ? p.thumbnailUrl || p.url : p;
-                  return `<div class="col-md-4 col-sm-6"><img src="${thumb}" class="img-thumbnail" style="width:100%;height:150px;object-fit:cover;cursor:pointer;" onclick="window.open('${url}','_blank')" alt="Photo ${i + 1}"></div>`;
-                })
-                .join("")}
-            </div>
-          </div>
-        </div>`;
+    if (
+      data.photoUrls &&
+      Array.isArray(data.photoUrls) &&
+      data.photoUrls.length > 0
+    ) {
+      const imgs = data.photoUrls
+        .map((photo) => {
+          const imgUrl = typeof photo === "string" ? photo : photo.url || "";
+          return imgUrl
+            ? `<img src="${imgUrl}" class="photo-thumbnail" onclick="window.open('${imgUrl}', '_blank')">`
+            : "";
+        })
+        .join("");
+
+      if (imgs) {
+        photosHtml = `<div class="d-flex flex-wrap gap-2 mt-3 p-2 rounded" style="background: rgba(0,0,0,0.2);">${imgs}</div>`;
+      }
     }
 
-    let gpsHtml = "";
-    if (data.gpsLocation?.latitude && data.gpsLocation?.longitude) {
-      gpsHtml = `<p class="mb-1"><strong>GPS:</strong> ${data.gpsLocation.latitude.toFixed(6)}, ${data.gpsLocation.longitude.toFixed(6)}</p>`;
-    }
+    cardsHtml += `
+            <div class="col-12 search-target">
+                <div class="glass-box p-4 complaint-card shadow-sm ${data.isHighPriority ? "high-priority" : ""}">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-light search-text mb-0">${display.title || "Untitled"}</h5>
+                        <span class="badge ${statusClass}">${data.status || "Submitted"}</span>
+                    </div>
 
-    container.innerHTML += `
-      <div class="complaint-card">
-        <h4>${data.title}</h4>
-        <p class="text-muted mb-2">${data.description}</p>
-        <p class="mb-1"><strong>${t("labelLocation")}:</strong> ${data.location}</p>
-        ${gpsHtml}
-        <p class="mb-1"><strong>${translateCategory(data.category)}</strong></p>
-        <p class="text-muted small">${t("labelSubmitted")}: ${formattedDate}</p>
-        <span class="status ${statusClass}">${translateStatus(data.status)}</span>
-        ${photosHtml}
-        <br><br>
-        <button onclick="viewComplaint('${data.id}')">${t("labelViewComplaint")}</button>
-      </div>`;
-  });
+                    <p class="text-muted small border-bottom border-secondary border-opacity-25 pb-2 mb-2 search-text">
+                        <i class="bi bi-person me-1"></i>${data.userName || "Citizen"} • 
+                        <i class="bi bi-geo-alt ms-2 me-1"></i>${display.location || "Unknown"} •
+                        <i class="bi bi-clock ms-2 me-1"></i>${dateStr}
+                    </p>
+
+                    <p class="card-text text-light flex-grow-1 search-text" style="font-size: 0.9rem;">
+                        ${display.description || "No description provided."}
+                    </p>
+                    
+                    <div class="mt-3">
+                        <p class="text-muted small mb-2 search-text">Photos:</p>
+                        ${photosHtml}
+                    </div>
+                </div>
+            </div>`;
+  }
+
+  container.innerHTML = cardsHtml;
 }
 
 // ===== VIEW COMPLAINT =====
@@ -520,16 +537,18 @@ window.viewComplaint = async function (id) {
     if (!snap.exists()) return;
     const data = snap.data();
     const lang = localStorage.getItem("lang") || "en";
-    let title = data.title,
-      description = data.description;
+    let display = { ...data };
+
+    // Handle Translation if Nepali is selected
     if (lang === "np") {
-      [title, description] = await Promise.all([
-        lingvaTranslate(data.title, lang),
-        lingvaTranslate(data.description, lang),
-      ]);
+      try {
+        const translated = await translateComplaint(data, "np");
+        display = { ...data, ...translated };
+      } catch (e) {}
     }
+
     alert(
-      `${t("alertViewTitle")}: ${title}\n${t("alertViewCategory")}: ${translateCategory(data.category)}\n${t("alertViewStatus")}: ${translateStatus(data.status)}\n${t("alertViewLocation")}: ${data.location}\n${t("alertViewMunicipality")}: ${data.municipality}\n${t("alertViewWard")}: ${data.wardNumber}`,
+      `${t("alertViewTitle")}: ${display.title}\n${t("alertViewCategory")}: ${translateCategory(display.category)}\n${t("alertViewStatus")}: ${translateStatus(display.status)}\n${t("alertViewLocation")}: ${display.location}\n${t("alertViewMunicipality")}: ${display.municipality}\n${t("alertViewWard")}: ${display.wardNumber}`,
     );
   } catch (error) {
     console.error("View error:", error);
@@ -548,3 +567,47 @@ if (langSelect) {
     await renderComplaints();
   });
 }
+
+// ===== INTERACTION HANDLERS =====
+document
+  .getElementById("complaintsListContainer")
+  ?.addEventListener("change", async (e) => {
+    const docId = e.target.getAttribute("data-id");
+    if (!docId) return;
+
+    try {
+      if (e.target.classList.contains("status-select")) {
+        await updateDoc(doc(db, "complaints", docId), {
+          status: e.target.value,
+        });
+      }
+      if (e.target.classList.contains("priority-toggle")) {
+        await updateDoc(doc(db, "complaints", docId), {
+          isHighPriority: e.target.checked,
+        });
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+    }
+  });
+
+// ===== SEARCH FILTER =====
+document.getElementById("searchInput")?.addEventListener("input", (e) => {
+  const query = e.target.value.toLowerCase();
+  const cards = document.querySelectorAll(".complaint-card");
+  cards.forEach((card) => {
+    const text = card.querySelector(".search-text").textContent.toLowerCase();
+    card.style.display = text.includes(query) ? "" : "none";
+  });
+});
+
+// ===== STATUS FILTER =====
+document.getElementById("statusFilter")?.addEventListener("change", (e) => {
+  const status = e.target.value;
+  const cards = document.querySelectorAll(".complaint-card");
+  cards.forEach((card) => {
+    const cardStatus = card.querySelector(".badge").textContent;
+    card.style.display =
+      status === "all" || cardStatus === status ? "" : "none";
+  });
+});

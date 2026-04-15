@@ -1,79 +1,80 @@
 // ============================================================
 //  translator.js  —  shared translation utility
-//  Uses Lingva Translate (free, no API key, no meaningful rate limit)
-//  Public instance: lingva.ml
-//  Translates: en → ne (Nepali ISO 639-1 code)
+//  Uses MyMemory API (free, no API key required, reliable)
+//  Translates: en → ne (Nepali)
 // ============================================================
 
-// In-memory cache: "text||en-ne" → translated string
-// Persists for the browser session — switching languages back and forth
-// after the first load is instant with zero extra API calls.
 const translationCache = new Map();
 
-const LINGVA_BASE = "https://lingva.ml/api/v1";
-
-/**
- * Translate a single string.
- * @param {string} text       - Source text (English)
- * @param {string} targetLang - "np" for Nepali, "en" to pass through unchanged
- * @returns {Promise<string>} - Translated string (falls back to original on error)
- *
- */
-
 export async function translateText(text, targetLang = "np") {
-  if (targetLang === "en") return text;
+  if (!text || targetLang === "en") return text;
 
-  const cacheKey = `${text}||en-ne`;
+  const cacheKey = `${text}||ne`;
   if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
 
   try {
-    const url = `${LINGVA_BASE}/en/ne/${encodeURIComponent(text)}`;
+    // Try MyMemory first (most reliable, free, no key needed)
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ne`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
 
-    const translated = json.translation || text;
+    // MyMemory returns responseStatus 200 on success
+    const translated =
+      json.responseStatus === 200 && json.responseData?.translatedText
+        ? json.responseData.translatedText
+        : text;
+
     translationCache.set(cacheKey, translated);
     return translated;
   } catch (err) {
-    console.warn("Translation failed, using original:", err.message);
-    return text;
+    // Fallback: try Lingva as backup
+    try {
+      const fallbackUrl = `https://lingva.ml/api/v1/en/ne/${encodeURIComponent(text)}`;
+      const fallbackRes = await fetch(fallbackUrl);
+      if (!fallbackRes.ok) throw new Error("Lingva also failed");
+      const fallbackJson = await fallbackRes.json();
+      const translated = fallbackJson.translation || text;
+      translationCache.set(cacheKey, translated);
+      return translated;
+    } catch {
+      console.warn("Translation failed for:", text);
+      return text;
+    }
   }
 }
 
-/**
- * Translate multiple strings in parallel.
- * Cached strings return instantly — no API call.
- */
 export async function translateBatch(texts, targetLang = "np") {
   if (targetLang === "en") return texts;
-  return Promise.all(texts.map((t) => translateText(t, targetLang)));
+  // Translate in parallel, max 5 at a time to avoid rate limits
+  const results = [];
+  for (let i = 0; i < texts.length; i += 5) {
+    const chunk = texts.slice(i, i + 5);
+    const translated = await Promise.all(
+      chunk.map((t) => translateText(t, targetLang)),
+    );
+    results.push(...translated);
+  }
+  return results;
 }
 
-/**
- * Translate user-written fields of a complaint.
- * Status and category are handled by local lookup — never sent to the API.
- */
 export async function translateComplaint(complaint, targetLang = "np") {
   if (targetLang === "en") {
     return { title: complaint.title, description: complaint.description };
   }
   const [title, description] = await translateBatch(
-    [complaint.title, complaint.description, complaint.status, complaint.category, complaint.location, complaint.userName, complaint.wardNumber,  complaint.createdAt],
+    [complaint.title || "", complaint.description || ""],
     targetLang,
   );
   return { title, description };
 }
 
-/**
- * Translate user-written fields of a broadcast.
- */
 export async function translateBroadcast(broadcast, targetLang = "np") {
   if (targetLang === "en") {
     return { title: broadcast.title, content: broadcast.content };
   }
   const [title, content] = await translateBatch(
-    [broadcast.title, broadcast.content],
+    [broadcast.title || "", broadcast.content || ""],
     targetLang,
   );
   return { title, content };

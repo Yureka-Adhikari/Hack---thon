@@ -1,6 +1,12 @@
 import { auth, db } from "../core/firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
+  translateText,
+  translateBatch,
+  translateComplaint,
+  translateBroadcast,
+} from "../core/translator.js";
+import {
   doc,
   getDoc,
   collection,
@@ -8,25 +14,6 @@ import {
   orderBy,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
-// ===== LINGVA TRANSLATION =====
-const translateCache = {};
-async function lingvaTranslate(text, targetLang) {
-  if (!text || targetLang === "en") return text;
-  const cacheKey = `${targetLang}:${text}`;
-  if (translateCache[cacheKey]) return translateCache[cacheKey];
-  try {
-    const res = await fetch(
-      `https://lingva.ml/api/v1/en/${targetLang}/${encodeURIComponent(text)}`,
-    );
-    const json = await res.json();
-    const translated = json.translation || text;
-    translateCache[cacheKey] = translated;
-    return translated;
-  } catch {
-    return text;
-  }
-}
 
 let cachedBroadcasts = [];
 let userWard = "N/A";
@@ -72,7 +59,35 @@ const categoryMap = {
   Electricity: { color: "ffc107", key: "catElectricity" },
 };
 
+// Normalise any category string → one of the 5 keys above
+function normalizeCategory(raw) {
+  if (!raw) return "General";
+  const s = raw.toLowerCase();
+  if (s.includes("water") || s.includes("sanitation") || s.includes("supply"))
+    return "Water";
+  if (s.includes("road") || s.includes("transport") || s.includes("traffic"))
+    return "Road";
+  if (
+    s.includes("waste") ||
+    s.includes("garbage") ||
+    s.includes("trash") ||
+    s.includes("clean")
+  )
+    return "Waste";
+  if (s.includes("electric") || s.includes("power") || s.includes("light"))
+    return "Electricity";
+  return "General";
+}
+
 function updateStaticLabels() {
+  const lang = localStorage.getItem("lang") || "en";
+  const data = translations[lang] || translations.en;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (!key || data[key] === undefined) return;
+    if (el.tagName === "INPUT") el.placeholder = data[key];
+    else el.innerText = data[key];
+  });
   const wardEl = document.getElementById("uWard");
   if (wardEl && userWard !== "N/A") {
     wardEl.innerText = `${t("wardLabel")} ${userWard}, ${userMunicipality}`;
@@ -125,10 +140,7 @@ async function renderBroadcasts() {
   const translatedList = await Promise.all(
     filtered.map(async (data) => {
       if (lang !== "np") return data;
-      const [title, content] = await Promise.all([
-        lingvaTranslate(data.title, lang),
-        lingvaTranslate(data.content, lang),
-      ]);
+      const { title, content } = await translateBroadcast(data, lang);
       return { ...data, title, content };
     }),
   );
@@ -148,8 +160,8 @@ async function renderBroadcasts() {
         <div style="
           padding: 14px 16px;
           border-radius: 12px;
-          background: rgb(15, 151, 255);
-          border: 1px solid rgb(62, 126, 178);
+          background: rgba(96, 96, 96, 0.32);
+          border: 1px solid rgb(0, 0, 0);
           border-left: 4px solid ${borderColor};
           cursor: pointer;
           transition: 0.2s ease;
@@ -180,12 +192,15 @@ onSnapshot(q, async (snapshot) => {
     cachedBroadcasts.push({
       title: raw.title || "",
       content: raw.content || "",
-      category: raw.category || "General",
+      category: normalizeCategory(raw.category),
       emergency: raw.emergency || false,
       createdAt: raw.createdAt,
     });
   });
   await renderBroadcasts();
+  // Re-apply static labels in case lang was set before data arrived
+  const _lang = localStorage.getItem("lang") || "en";
+  if (_lang !== "en") updateStaticLabels();
 });
 
 // ===== LANGUAGE SELECTOR =====
@@ -194,6 +209,7 @@ if (langSelect) {
   const stored = localStorage.getItem("lang") || "en";
   langSelect.value = stored;
   updateStaticLabels();
+  if (stored !== "en") await renderBroadcasts();
   langSelect.addEventListener("change", async () => {
     localStorage.setItem("lang", langSelect.value);
     updateStaticLabels();

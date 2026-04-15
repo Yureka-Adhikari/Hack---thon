@@ -1,4 +1,10 @@
 import { auth, db } from "../core/firebase-config.js";
+import {
+  translateText,
+  translateBatch,
+  translateComplaint,
+  translateBroadcast,
+} from "../core/translator.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
   collection,
@@ -196,7 +202,7 @@ function initBroadcastLog() {
       div.innerHTML = `
         <div style="
           padding:16px; border-radius:12px;
-          background:rgba(255,255,255,0.04);
+          background:rgba(58, 58, 58, 0.9);
           border:1px solid rgba(255,255,255,0.08);
           border-left:4px solid ${borderColor};
           position:relative;
@@ -229,6 +235,8 @@ function initBroadcastLog() {
 document.getElementById("postBtn")?.addEventListener("click", async () => {
   const title = document.getElementById("title")?.value.trim() || "";
   const content = document.getElementById("content")?.value.trim() || "";
+  const category =
+    document.getElementById("broadcastCategory")?.value || "General";
   const emergency = document.getElementById("emergency")?.checked || false;
   const isStrike = document.getElementById("isStrike")?.checked || false;
   const location =
@@ -250,6 +258,7 @@ document.getElementById("postBtn")?.addEventListener("click", async () => {
     await addDoc(collection(db, "broadcasts"), {
       title,
       content,
+      category,
       emergency,
       isStrike,
       location,
